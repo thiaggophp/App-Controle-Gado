@@ -79,6 +79,45 @@ export async function saveSaude(s){
 }
 export async function deleteSaude(id){try{await pb.collection("gado_saude").delete(id)}catch{}}
 
+// ─── BACKUP ───
+export async function exportAllData(ownerEmail){
+  const fazendas=await getFazendas(ownerEmail);
+  const lotes=await getLotes(ownerEmail);
+  const animais=[],pesagens=[],custos=[],vendas=[],saude=[];
+  for(const l of lotes){
+    animais.push(...await getAnimais(l.id));
+    pesagens.push(...await getPesagens(l.id));
+    custos.push(...await getCustos(l.id));
+    vendas.push(...await getVendas(l.id));
+    saude.push(...await getSaude(l.id));
+  }
+  return{appName:"GadoControle",version:1,exportDate:new Date().toISOString(),ownerEmail,fazendas,lotes,animais,pesagens,custos,vendas,saude};
+}
+export async function importAllData(data){
+  const fazIdMap={},loteIdMap={},animalIdMap={};
+  for(const f of data.fazendas||[]){const oldId=f.id;f.id=null;const c=await saveFazenda(f);if(oldId)fazIdMap[oldId]=c.id;}
+  for(const l of data.lotes||[]){
+    if(l.fazendaId&&fazIdMap[l.fazendaId])l.fazendaId=fazIdMap[l.fazendaId];
+    const oldId=l.id;l.id=null;const c=await saveLote(l);if(oldId)loteIdMap[oldId]=c.id;
+  }
+  for(const a of data.animais||[]){
+    if(a.loteId&&loteIdMap[a.loteId])a.loteId=loteIdMap[a.loteId];
+    const oldId=a.id;a.id=null;const c=await saveAnimal(a);if(oldId)animalIdMap[oldId]=c.id;
+  }
+  for(const p of data.pesagens||[]){
+    if(p.loteId&&loteIdMap[p.loteId])p.loteId=loteIdMap[p.loteId];
+    if(p.animalId&&animalIdMap[p.animalId])p.animalId=animalIdMap[p.animalId];
+    p.id=null;await savePesagem(p);
+  }
+  for(const c of data.custos||[]){if(c.loteId&&loteIdMap[c.loteId])c.loteId=loteIdMap[c.loteId];c.id=null;await saveCusto(c);}
+  for(const v of data.vendas||[]){if(v.loteId&&loteIdMap[v.loteId])v.loteId=loteIdMap[v.loteId];v.id=null;await saveVenda(v);}
+  for(const s of data.saude||[]){
+    if(s.loteId&&loteIdMap[s.loteId])s.loteId=loteIdMap[s.loteId];
+    if(s.animalId&&animalIdMap[s.animalId])s.animalId=animalIdMap[s.animalId];
+    s.id=null;await saveSaude(s);
+  }
+}
+
 // ─── INIT ADMIN ───
 export async function initAdmin(){
   // Admin account is created once via API — no credentials compiled into the bundle
