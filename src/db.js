@@ -30,7 +30,7 @@ export async function saveFazenda(f){
 export async function deleteFazenda(id){try{await pb.collection("gado_fazendas").delete(id)}catch{}}
 
 // ─── LOTES ───
-export async function getLotes(ownerEmail){try{return await pb.collection("gado_lotes").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-dataEntrada"})}catch{return[]}}
+export async function getLotes(ownerEmail){try{return await pb.collection("gado_lotes").getFullList({filter:`ownerEmail="${ownerEmail}"`})}catch{return[]}}
 export async function saveLote(l){
   if(l.id)return pb.collection("gado_lotes").update(l.id,l);
   const c=await pb.collection("gado_lotes").create(l);l.id=c.id;return c;
@@ -38,7 +38,7 @@ export async function saveLote(l){
 export async function deleteLote(id){try{await pb.collection("gado_lotes").delete(id)}catch{}}
 
 // ─── ANIMAIS ───
-export async function getAnimais(loteId){try{return await pb.collection("gado_animais").getFullList({filter:`loteId="${loteId}"`,sort:"brinco"})}catch{return[]}}
+export async function getAnimais(loteId){try{return await pb.collection("gado_animais").getFullList({filter:`loteId="${loteId}"`})}catch{return[]}}
 export async function getAnimalByBrinco(ownerEmail,brinco){try{return await pb.collection("gado_animais").getFirstListItem(`ownerEmail="${ownerEmail}"&&brinco="${brinco}"`)}catch{return null}}
 export async function saveAnimal(a){
   if(a.id)return pb.collection("gado_animais").update(a.id,a);
@@ -47,8 +47,8 @@ export async function saveAnimal(a){
 export async function deleteAnimal(id){try{await pb.collection("gado_animais").delete(id)}catch{}}
 
 // ─── PESAGENS ───
-export async function getPesagens(loteId){try{return await pb.collection("gado_pesagens").getFullList({filter:`loteId="${loteId}"`,sort:"-data"})}catch{return[]}}
-export async function getPesagensAnimal(animalId){try{return await pb.collection("gado_pesagens").getFullList({filter:`animalId="${animalId}"`,sort:"-data"})}catch{return[]}}
+export async function getPesagens(loteId){try{return await pb.collection("gado_pesagens").getFullList({filter:`loteId="${loteId}"`})}catch{return[]}}
+export async function getPesagensAnimal(animalId){try{return await pb.collection("gado_pesagens").getFullList({filter:`animalId="${animalId}"`})}catch{return[]}}
 export async function savePesagem(p){
   if(p.id)return pb.collection("gado_pesagens").update(p.id,p);
   const c=await pb.collection("gado_pesagens").create(p);p.id=c.id;return c;
@@ -56,7 +56,7 @@ export async function savePesagem(p){
 export async function deletePesagem(id){try{await pb.collection("gado_pesagens").delete(id)}catch{}}
 
 // ─── CUSTOS ───
-export async function getCustos(loteId){try{return await pb.collection("gado_custos").getFullList({filter:`loteId="${loteId}"`,sort:"-data"})}catch{return[]}}
+export async function getCustos(loteId){try{return await pb.collection("gado_custos").getFullList({filter:`loteId="${loteId}"`})}catch{return[]}}
 export async function saveCusto(c){
   if(c.id)return pb.collection("gado_custos").update(c.id,c);
   const cr=await pb.collection("gado_custos").create(c);c.id=cr.id;return cr;
@@ -64,7 +64,7 @@ export async function saveCusto(c){
 export async function deleteCusto(id){try{await pb.collection("gado_custos").delete(id)}catch{}}
 
 // ─── VENDAS ───
-export async function getVendas(loteId){try{return await pb.collection("gado_vendas").getFullList({filter:`loteId="${loteId}"`,sort:"-data"})}catch{return[]}}
+export async function getVendas(loteId){try{return await pb.collection("gado_vendas").getFullList({filter:`loteId="${loteId}"`})}catch{return[]}}
 export async function saveVenda(v){
   if(v.id)return pb.collection("gado_vendas").update(v.id,v);
   const c=await pb.collection("gado_vendas").create(v);v.id=c.id;return c;
@@ -72,7 +72,7 @@ export async function saveVenda(v){
 export async function deleteVenda(id){try{await pb.collection("gado_vendas").delete(id)}catch{}}
 
 // ─── SAÚDE ───
-export async function getSaude(loteId){try{return await pb.collection("gado_saude").getFullList({filter:`loteId="${loteId}"`,sort:"-data"})}catch{return[]}}
+export async function getSaude(loteId){try{return await pb.collection("gado_saude").getFullList({filter:`loteId="${loteId}"`})}catch{return[]}}
 export async function saveSaude(s){
   if(s.id)return pb.collection("gado_saude").update(s.id,s);
   const c=await pb.collection("gado_saude").create(s);s.id=c.id;return c;
