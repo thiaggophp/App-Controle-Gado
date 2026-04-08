@@ -6,6 +6,8 @@ import Card from"../components/Card";
 
 const SEXO=[{value:"M",label:"Macho"},{value:"F",label:"Fêmea"}];
 const RACAS=["Nelore","Angus","Brangus","Brahman","Guzera","Simental","Hereford","Limousin","Mestiço","Outra"];
+const CATEGORIAS=["Bezerro(a)","Garrote(a)","Novilho/Novilha","Boi/Vaca"];
+const CAUSAS_BAIXA=["Morte natural","Morte por doença","Abate de emergência","Venda avulsa","Descarte","Transferência","Furto/Abigeato","Outro"];
 const TIPOS_CUSTO=["Ração/Silagem","Sal mineral/Suplemento","Vacina","Vermífugo","Remédio/Tratamento","Frete","Mão de obra","Pasto/Arrendamento","Outros"];
 const HOJE=new Date().toISOString().slice(0,10);
 function fmt(v){return(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}
@@ -25,9 +27,10 @@ export default function LoteDetalhe({lote,user,onVoltar}){
   const[vendaModal,setVendaModal]=useState(false);
   const[deleteModal,setDeleteModal]=useState(null);
   const[brincoScanner,setBrincoScanner]=useState(false);
+  const[baixaModal,setBaixaModal]=useState(false);const[causaBaixa,setCausaBaixa]=useState("");
 
   // Formulários
-  const[animalForm,setAnimalForm]=useState({brinco:"",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});
+  const[animalForm,setAnimalForm]=useState({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});
   const[editAnimal,setEditAnimal]=useState(null);
   const[pesagemForm,setPesagemForm]=useState({tipo:"lote",animalId:"",data:HOJE,peso:"",obs:""});
   const[custoForm,setCustoForm]=useState({data:HOJE,tipo:"Ração/Silagem",valor:"",descricao:""});
@@ -48,7 +51,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     await saveAnimal(a);setAnimalModal(false);setEditAnimal(null);await recarregar();
   };
   const excluirAnimal=async()=>{await deleteAnimal(deleteModal.id);setDeleteModal(null);await recarregar()};
-  const abrirAnimal=(a)=>{setEditAnimal(a);setAnimalForm({...a,pesoEntrada:String(a.pesoEntrada)});setAnimalModal(true)};
+  const abrirAnimal=(a)=>{setEditAnimal(a);setAnimalForm({...a,categoria:a.categoria||"Novilho/Novilha",pesoEntrada:String(a.pesoEntrada)});setAnimalModal(true)};
   const baixaAnimal=async(a,causa)=>{await saveAnimal({...a,status:"baixa",causaBaixa:causa});await recarregar()};
 
   // ── PESAGENS ──
@@ -139,7 +142,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     {/* ── ABA: ANIMAIS ── */}
     {aba==="animais"&&<div>
       <div style={{display:"flex",gap:8,marginBottom:12}}>
-        <button onClick={()=>{setEditAnimal(null);setAnimalForm({brinco:"",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});setAnimalModal(true)}} style={{flex:1,background:"linear-gradient(135deg,#16a34a,#15803d)",border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Adicionar Animal</button>
+        <button onClick={()=>{setEditAnimal(null);setAnimalForm({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});setAnimalModal(true)}} style={{flex:1,background:"linear-gradient(135deg,#16a34a,#15803d)",border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Adicionar Animal</button>
         <button onClick={()=>alert("Em breve: leitor de brincos via câmera")} style={{background:"rgba(22,163,74,.1)",border:"1px solid rgba(22,163,74,.25)",borderRadius:12,padding:"10px 14px",color:"#86efac",fontSize:13,fontWeight:700,cursor:"pointer"}}>📷 Brinco</button>
       </div>
       {animaisAtivos.length>0&&<div style={{color:"#64748b",fontSize:11,fontWeight:700,letterSpacing:.8,marginBottom:8}}>ATIVOS ({animaisAtivos.length})</div>}
@@ -149,7 +152,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
               <div style={{color:"#f1f5f9",fontWeight:700,fontSize:15}}>🏷️ {a.brinco}</div>
-              <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{a.raca} · {a.sexo==="M"?"Macho":"Fêmea"} · Entrada: {fmt(a.pesoEntrada)}kg</div>
+              <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{a.categoria||"—"} · {a.raca} · {a.sexo==="M"?"Macho":"Fêmea"} · {fmt(a.pesoEntrada)}kg</div>
               {g&&<div style={{color:"#4ade80",fontSize:11,marginTop:2,fontWeight:600}}>GMD: +{g} kg/dia</div>}
             </div>
             <div style={{textAlign:"right"}}>
@@ -243,12 +246,13 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     {/* ── MODAIS ── */}
     <Modal open={animalModal} onClose={()=>setAnimalModal(false)} title={editAnimal?"Editar Animal":"Novo Animal"}>
       <Input label="Número do brinco" value={animalForm.brinco} onChange={e=>setAnimalForm({...animalForm,brinco:e.target.value})} placeholder="Ex: 0042"/>
+      <Select label="Categoria" value={animalForm.categoria} onChange={e=>setAnimalForm({...animalForm,categoria:e.target.value})} options={CATEGORIAS.map(c=>({value:c,label:c}))}/>
       <Select label="Sexo" value={animalForm.sexo} onChange={e=>setAnimalForm({...animalForm,sexo:e.target.value})} options={SEXO}/>
       <Select label="Raça" value={animalForm.raca} onChange={e=>setAnimalForm({...animalForm,raca:e.target.value})} options={RACAS.map(r=>({value:r,label:r}))}/>
       <Input label="Peso de entrada (kg)" type="number" value={animalForm.pesoEntrada} onChange={e=>setAnimalForm({...animalForm,pesoEntrada:e.target.value})} placeholder="0" inputMode="decimal"/>
       <Input label="Data de entrada" type="date" value={animalForm.dataEntrada} onChange={e=>setAnimalForm({...animalForm,dataEntrada:e.target.value})}/>
       <Input label="Observações" value={animalForm.obs||""} onChange={e=>setAnimalForm({...animalForm,obs:e.target.value})} placeholder="Opcional"/>
-      {editAnimal&&editAnimal.status==="ativo"&&<Btn onClick={()=>{const c=prompt("Causa da baixa (morte, venda avulsa, etc.):");if(c)baixaAnimal(editAnimal,c);setAnimalModal(false)}} color="rgba(239,68,68,.15)" style={{marginBottom:8,border:"1px solid rgba(239,68,68,.3)",color:"#ef4444"}}>Registrar Baixa</Btn>}
+      {editAnimal&&editAnimal.status==="ativo"&&<Btn onClick={()=>{setCausaBaixa(CAUSAS_BAIXA[0]);setBaixaModal(true)}} color="rgba(239,68,68,.15)" style={{marginBottom:8,border:"1px solid rgba(239,68,68,.3)",color:"#ef4444"}}>Registrar Baixa</Btn>}
       <Btn onClick={salvarAnimal}>{editAnimal?"Salvar":"Cadastrar Animal"}</Btn>
     </Modal>
 
@@ -285,6 +289,15 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       <Input label="Comprador" value={vendaForm.comprador||""} onChange={e=>setVendaForm({...vendaForm,comprador:e.target.value})} placeholder="Nome do frigorífico ou comprador"/>
       <Input label="Observações" value={vendaForm.obs||""} onChange={e=>setVendaForm({...vendaForm,obs:e.target.value})} placeholder="Opcional"/>
       <Btn onClick={salvarVenda}>Confirmar Venda</Btn>
+    </Modal>
+
+    <Modal open={baixaModal} onClose={()=>setBaixaModal(false)} title="Registrar Baixa">
+      <p style={{color:"#94a3b8",fontSize:13,marginBottom:12}}>Informe a causa da baixa do animal <strong style={{color:"#f1f5f9"}}>🏷️ {editAnimal?.brinco}</strong>:</p>
+      <Select label="Causa da baixa" value={causaBaixa} onChange={e=>setCausaBaixa(e.target.value)} options={CAUSAS_BAIXA.map(c=>({value:c,label:c}))}/>
+      <div style={{display:"flex",gap:8,marginTop:8}}>
+        <Btn onClick={()=>setBaixaModal(false)} color="rgba(255,255,255,0.06)" style={{flex:1,border:"1px solid rgba(255,255,255,0.08)",color:"#94a3b8"}}>Cancelar</Btn>
+        <Btn onClick={async()=>{if(causaBaixa.trim()){await baixaAnimal(editAnimal,causaBaixa);setBaixaModal(false);setAnimalModal(false)}}} color="linear-gradient(135deg,#ef4444,#dc2626)" style={{flex:1}}>Confirmar Baixa</Btn>
+      </div>
     </Modal>
 
     <Modal open={!!deleteModal} onClose={()=>setDeleteModal(null)} title="Excluir registro">

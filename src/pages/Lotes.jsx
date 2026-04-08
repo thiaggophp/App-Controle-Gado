@@ -15,13 +15,13 @@ export default function Lotes({user,onAbrirLote}){
   const[deleteModal,setDeleteModal]=useState(null);
   const[edit,setEdit]=useState(null);
   const[filtro,setFiltro]=useState("ativo");
-  const[form,setForm]=useState({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:"",qtdEntrada:0,pesoMedioEntrada:0,valorCabeca:0,obs:""});
+  const[form,setForm]=useState({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:"",qtdEntrada:0,pesoMedioEntrada:0,valorCabeca:0,procedencia:"",obs:""});
   const[nomeFazenda,setNomeFazenda]=useState("");const[cidadeFazenda,setCidadeFazenda]=useState("");
 
   const recarregar=async()=>{setLotes(await getLotes(user.email));setFazendas(await getFazendas(user.email))};
   useEffect(()=>{recarregar()},[user.email]);
 
-  const abrirNovo=()=>{setEdit(null);setForm({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:fazendas[0]?.id||"",qtdEntrada:"",pesoMedioEntrada:"",valorCabeca:"",obs:""});setModal(true)};
+  const abrirNovo=()=>{setEdit(null);setForm({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:fazendas[0]?.id||"",qtdEntrada:"",pesoMedioEntrada:"",valorCabeca:"",procedencia:"",obs:""});setModal(true)};
   const abrirEditar=(l)=>{setEdit(l);setForm({...l});setModal(true)};
 
   const salvar=async()=>{
@@ -74,6 +74,7 @@ export default function Lotes({user,onAbrirLote}){
               </div>
               <div style={{color:"#64748b",fontSize:12}}>{l.racaPredominante} · {l.qtdEntrada} cabeças · {fmtData(l.dataEntrada)}</div>
               {fazenda&&<div style={{color:"#475569",fontSize:11,marginTop:2}}>📍 {fazenda.nome}{fazenda.cidade?" — "+fazenda.cidade:""}</div>}
+              {l.procedencia&&<div style={{color:"#475569",fontSize:11,marginTop:1}}>🛒 {l.procedencia}</div>}
             </div>
             {l.status==="ativo"&&<div style={{background:"rgba(22,163,74,.1)",borderRadius:12,padding:"8px 12px",textAlign:"center",flexShrink:0}}>
               <div style={{color:"#4ade80",fontSize:18,fontWeight:800}}>{dias}</div>
@@ -111,7 +112,8 @@ export default function Lotes({user,onAbrirLote}){
         </div>
       </div>
       {edit&&<Select label="Status" value={form.status} onChange={e=>setForm({...form,status:e.target.value})} options={STATUS}/>}
-      <Input label="Observações (opcional)" value={form.obs||""} onChange={e=>setForm({...form,obs:e.target.value})} placeholder="Procedência, condições..."/>
+      <Input label="Procedência (de onde veio o gado)" value={form.procedencia||""} onChange={e=>setForm({...form,procedencia:e.target.value})} placeholder="Ex: Fazenda Boa Vista, leilão Barretos..."/>
+      <Input label="Observações (opcional)" value={form.obs||""} onChange={e=>setForm({...form,obs:e.target.value})} placeholder="Condições, detalhes adicionais..."/>
       <Btn onClick={salvar}>{edit?"Salvar Alterações":"Criar Lote"}</Btn>
     </Modal>
 
