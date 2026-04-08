@@ -1,6 +1,6 @@
 import{useState}from"react";
 import{getAccount,addSignupRequest,saveAccount}from"../db";
-import{sendPasswordEmail,generatePassword}from"../emailService";
+import{sendPasswordEmail,generatePassword,sendSignupNotification}from"../emailService";
 import{Btn,Input}from"../components/FormElements";
 
 export default function Login({onLogin}){
@@ -41,6 +41,7 @@ export default function Login({onLogin}){
       const existing=await getAccount(e);
       if(existing){setMsg({t:"error",m:"E-mail já cadastrado"});setLoading(false);return}
       await addSignupRequest({email:e,name:name.trim(),requestedAt:new Date().toISOString(),status:"pending"});
+      sendSignupNotification(name.trim(),e);
       setMsg({t:"success",m:"Solicitação enviada! Aguarde aprovação."});setMode("login");
     }catch(err){setMsg({t:"error",m:"Erro: "+err.message});}
     setLoading(false);

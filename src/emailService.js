@@ -9,3 +9,6 @@ export async function sendPasswordEmail(toName,toEmail,tempPassword){
   if(!res.ok)throw new Error("Falha ao enviar e-mail: "+res.status);
   return true;
 }
+export async function sendSignupNotification(name,email){
+  try{await fetch("https://mail.financascasa.online/notify-signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({requester_name:name,requester_email:email,app_name:"GadoControle"})})}catch{}
+}
