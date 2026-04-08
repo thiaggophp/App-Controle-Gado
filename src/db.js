@@ -81,10 +81,5 @@ export async function deleteSaude(id){try{await pb.collection("gado_saude").dele
 
 // ─── INIT ADMIN ───
 export async function initAdmin(){
-  const adminEmail=import.meta.env.VITE_ADMIN_EMAIL||"";
-  const adminPass=import.meta.env.VITE_ADMIN_PASSWORD||"";
-  try{
-    const existing=await getAccount(adminEmail);
-    if(!existing)await saveAccount({email:adminEmail,name:"Admin",password:adminPass,role:"admin",status:"active",mustChangePassword:false,protected:true,parentEmail:""});
-  }catch{}
+  // Admin account is created once via API — no credentials compiled into the bundle
 }
