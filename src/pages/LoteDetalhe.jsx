@@ -30,12 +30,28 @@ export default function LoteDetalhe({lote,user,onVoltar}){
   const[baixaModal,setBaixaModal]=useState(false);const[causaBaixa,setCausaBaixa]=useState("");
 
   // Formulários
-  const[animalForm,setAnimalForm]=useState({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});
+  const[buscaBrinco,setBuscaBrinco]=useState("");
+  const[animalForm,setAnimalForm]=useState({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:"",foto:""});
+
+  const handleFotoAnimal=(e)=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxW=800;const scale=Math.min(1,maxW/img.width);
+        const canvas=document.createElement("canvas");canvas.width=img.width*scale;canvas.height=img.height*scale;
+        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+        setAnimalForm(f=>({...f,foto:canvas.toDataURL("image/jpeg",0.7)}));
+      };img.src=ev.target.result;
+    };reader.readAsDataURL(file);
+  };
   const[editAnimal,setEditAnimal]=useState(null);
   const[pesagemForm,setPesagemForm]=useState({tipo:"lote",animalId:"",data:HOJE,peso:"",obs:""});
   const[custoForm,setCustoForm]=useState({data:HOJE,tipo:"Ração/Silagem",valor:"",descricao:""});
   const[editCusto,setEditCusto]=useState(null);
   const[vendaForm,setVendaForm]=useState({data:HOJE,qtdAnimais:"",arrobas:"",valorArroba:"",comprador:"",obs:""});
+  const[simValorArroba,setSimValorArroba]=useState("");const[simRendimento,setSimRendimento]=useState("50");
 
   const recarregar=async()=>{
     const[a,p,c,v]=await Promise.all([getAnimais(lote.id),getPesagens(lote.id),getCustos(lote.id),getVendas(lote.id)]);
@@ -90,8 +106,16 @@ export default function LoteDetalhe({lote,user,onVoltar}){
   // ── CÁLCULOS ──
   const totalCustos=custos.reduce((s,c)=>s+c.valor,0);
   const totalReceita=vendas.reduce((s,v)=>s+v.total,0);
-  const lucro=totalReceita-totalCustos-(lote.qtdEntrada*lote.valorCabeca||0);
+  const custoCompra=(lote.qtdEntrada||0)*(lote.valorCabeca||0);
+  const lucro=totalReceita-totalCustos-custoCompra;
   const animaisAtivos=animais.filter(a=>a.status==="ativo");
+
+  // Custo por arroba
+  const ultPesagemLote=pesagens.filter(p=>!p.animalId).sort((a,b)=>b.data.localeCompare(a.data))[0];
+  const pesoMedioAtual=ultPesagemLote?ultPesagemLote.peso:(lote.pesoMedioEntrada||0);
+  const arrobasAtuais=pesoMedioAtual>0?((pesoMedioAtual*animaisAtivos.length)||pesoMedioAtual*(lote.qtdEntrada||1))/15:0;
+  const totalInvestido=custoCompra+totalCustos;
+  const custoPorArroba=arrobasAtuais>0?totalInvestido/arrobasAtuais:0;
 
   const gmd=(a)=>{
     const pesAgora=pesagens.filter(p=>p.animalId===a.id).sort((x,y)=>y.data.localeCompare(x.data));
@@ -116,7 +140,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
           {lote.status==="ativo"?"Em engorda":"Encerrado"}
         </span>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:14}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginTop:14}}>
         <div style={{textAlign:"center"}}>
           <div style={{color:"#ef4444",fontSize:13,fontWeight:800}}>R$ {fmt(totalCustos)}</div>
           <div style={{color:"#64748b",fontSize:10}}>Custos</div>
@@ -128,6 +152,10 @@ export default function LoteDetalhe({lote,user,onVoltar}){
         <div style={{textAlign:"center"}}>
           <div style={{color:lucro>=0?"#4ade80":"#ef4444",fontSize:13,fontWeight:800}}>R$ {fmt(lucro)}</div>
           <div style={{color:"#64748b",fontSize:10}}>Lucro est.</div>
+        </div>
+        <div style={{textAlign:"center"}}>
+          <div style={{color:"#fbbf24",fontSize:13,fontWeight:800}}>{custoPorArroba>0?"R$ "+Math.round(custoPorArroba):"—"}</div>
+          <div style={{color:"#64748b",fontSize:10}}>Custo/@</div>
         </div>
       </div>
     </div>
@@ -141,23 +169,30 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
     {/* ── ABA: ANIMAIS ── */}
     {aba==="animais"&&<div>
-      <div style={{display:"flex",gap:8,marginBottom:12}}>
-        <button onClick={()=>{setEditAnimal(null);setAnimalForm({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});setAnimalModal(true)}} style={{flex:1,background:"linear-gradient(135deg,#16a34a,#15803d)",border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Adicionar Animal</button>
-        <button onClick={()=>alert("Em breve: leitor de brincos via câmera")} style={{background:"rgba(22,163,74,.1)",border:"1px solid rgba(22,163,74,.25)",borderRadius:12,padding:"10px 14px",color:"#86efac",fontSize:13,fontWeight:700,cursor:"pointer"}}>📷 Brinco</button>
+      <div style={{display:"flex",gap:8,marginBottom:10}}>
+        <button onClick={()=>{setEditAnimal(null);setAnimalForm({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:"",foto:""});setAnimalModal(true)}} style={{flex:1,background:"linear-gradient(135deg,#16a34a,#15803d)",border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Adicionar Animal</button>
       </div>
+      <input value={buscaBrinco} onChange={e=>setBuscaBrinco(e.target.value)} placeholder="🔍 Buscar por brinco..." style={{width:"100%",padding:"10px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,color:"#f1f5f9",fontSize:14,outline:"none",boxSizing:"border-box",marginBottom:10,colorScheme:"dark"}}/>
       {animaisAtivos.length>0&&<div style={{color:"#64748b",fontSize:11,fontWeight:700,letterSpacing:.8,marginBottom:8}}>ATIVOS ({animaisAtivos.length})</div>}
-      {animaisAtivos.map(a=>{
+      {animaisAtivos.filter(a=>!buscaBrinco||a.brinco.toLowerCase().includes(buscaBrinco.toLowerCase())).map(a=>{
         const g=gmd(a);
+        const ultPes=pesagens.filter(p=>p.animalId===a.id).sort((x,y)=>y.data.localeCompare(x.data))[0];
+        const pesoAtual=ultPes?ultPes.peso:a.pesoEntrada;
+        const prontoAbate=pesoAtual>=450;
         return(<Card key={a.id} onClick={()=>abrirAnimal(a)}>
+          {a.foto&&<img src={a.foto} alt="foto" style={{width:"100%",height:100,objectFit:"cover",borderRadius:"8px 8px 0 0",marginBottom:8}}/>}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
-              <div style={{color:"#f1f5f9",fontWeight:700,fontSize:15}}>🏷️ {a.brinco}</div>
-              <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{a.categoria||"—"} · {a.raca} · {a.sexo==="M"?"Macho":"Fêmea"} · {fmt(a.pesoEntrada)}kg</div>
+              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                <span style={{color:"#f1f5f9",fontWeight:700,fontSize:15}}>🏷️ {a.brinco}</span>
+                {prontoAbate&&<span style={{background:"rgba(34,197,94,.15)",color:"#22c55e",fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:10}}>✓ Pronto p/ abate</span>}
+              </div>
+              <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{a.categoria||"—"} · {a.raca} · {a.sexo==="M"?"Macho":"Fêmea"}</div>
               {g&&<div style={{color:"#4ade80",fontSize:11,marginTop:2,fontWeight:600}}>GMD: +{g} kg/dia</div>}
             </div>
             <div style={{textAlign:"right"}}>
-              <div style={{color:"#22c55e",fontSize:13,fontWeight:700}}>{fmt(a.pesoEntrada)} kg</div>
-              <div style={{color:"#475569",fontSize:10}}>na entrada</div>
+              <div style={{color:prontoAbate?"#22c55e":"#94a3b8",fontSize:13,fontWeight:700}}>{fmt(pesoAtual)} kg</div>
+              <div style={{color:"#475569",fontSize:10}}>{ultPes?"atual":"entrada"}</div>
             </div>
           </div>
         </Card>);
@@ -241,6 +276,36 @@ export default function LoteDetalhe({lote,user,onVoltar}){
         </div>
       </div>}
       {vendas.length===0&&<div style={{textAlign:"center",padding:"30px 0",color:"#475569"}}>Nenhuma venda registrada</div>}
+      <div style={{background:"rgba(251,191,36,.06)",border:"1px solid rgba(251,191,36,.15)",borderRadius:14,padding:"14px 16px",marginTop:12}}>
+        <div style={{color:"#fbbf24",fontSize:11,fontWeight:700,letterSpacing:.8,marginBottom:10}}>💡 SIMULADOR DE VENDA</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+          <div>
+            <div style={{color:"#64748b",fontSize:11,marginBottom:4}}>Valor/@(R$)</div>
+            <input type="number" value={simValorArroba} onChange={e=>setSimValorArroba(e.target.value)} placeholder="ex: 320" inputMode="decimal" style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,color:"#f1f5f9",fontSize:14,outline:"none",boxSizing:"border-box",colorScheme:"dark"}}/>
+          </div>
+          <div>
+            <div style={{color:"#64748b",fontSize:11,marginBottom:4}}>Rendimento carcaça %</div>
+            <input type="number" value={simRendimento} onChange={e=>setSimRendimento(e.target.value)} placeholder="50" inputMode="decimal" style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,color:"#f1f5f9",fontSize:14,outline:"none",boxSizing:"border-box",colorScheme:"dark"}}/>
+          </div>
+        </div>
+        {simValorArroba&&(()=>{
+          const vAt=parseFloat(simValorArroba)||0;const rend=(parseFloat(simRendimento)||50)/100;
+          const nAtivos=animaisAtivos.length||lote.qtdEntrada||0;
+          const pMedio=pesoMedioAtual||0;
+          const arrobas=(pMedio*rend/15)*nAtivos;
+          const receita=arrobas*vAt;
+          const lucroSim=receita-totalInvestido;
+          const roi=totalInvestido>0?(lucroSim/totalInvestido)*100:0;
+          return(<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginTop:4}}>
+            {[["Receita est.","#22c55e","R$ "+fmt(receita)],["Lucro/Prejuízo",lucroSim>=0?"#22c55e":"#ef4444","R$ "+fmt(lucroSim)],["ROI",roi>=0?"#fbbf24":"#ef4444",roi.toFixed(1)+"%"]].map(([l,c,v])=>
+              <div key={l} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"8px",textAlign:"center"}}>
+                <div style={{color:c,fontWeight:800,fontSize:12}}>{v}</div>
+                <div style={{color:"#475569",fontSize:10}}>{l}</div>
+              </div>
+            )}
+          </div>);
+        })()}
+      </div>
     </div>}
 
     {/* ── MODAIS ── */}
@@ -252,6 +317,13 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       <Input label="Peso de entrada (kg)" type="number" value={animalForm.pesoEntrada} onChange={e=>setAnimalForm({...animalForm,pesoEntrada:e.target.value})} placeholder="0" inputMode="decimal"/>
       <Input label="Data de entrada" type="date" value={animalForm.dataEntrada} onChange={e=>setAnimalForm({...animalForm,dataEntrada:e.target.value})}/>
       <Input label="Observações" value={animalForm.obs||""} onChange={e=>setAnimalForm({...animalForm,obs:e.target.value})} placeholder="Opcional"/>
+      <div style={{marginBottom:16}}>
+        {animalForm.foto&&<img src={animalForm.foto} alt="preview" style={{width:"100%",height:100,objectFit:"cover",borderRadius:8,marginBottom:6}}/>}
+        <label style={{display:"flex",alignItems:"center",gap:8,background:"rgba(22,163,74,.08)",border:"1px solid rgba(22,163,74,.2)",borderRadius:10,padding:"8px 14px",cursor:"pointer",color:"#86efac",fontSize:13,fontWeight:600}}>
+          📷 {animalForm.foto?"Trocar foto":"Foto do animal"}
+          <input type="file" accept="image/*" capture="environment" onChange={handleFotoAnimal} style={{display:"none"}}/>
+        </label>
+      </div>
       {editAnimal&&editAnimal.status==="ativo"&&<Btn onClick={()=>{setCausaBaixa(CAUSAS_BAIXA[0]);setBaixaModal(true)}} color="rgba(239,68,68,.15)" style={{marginBottom:8,border:"1px solid rgba(239,68,68,.3)",color:"#ef4444"}}>Registrar Baixa</Btn>}
       <Btn onClick={salvarAnimal}>{editAnimal?"Salvar":"Cadastrar Animal"}</Btn>
     </Modal>
