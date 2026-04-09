@@ -1,17 +1,32 @@
+import{useState,useEffect,useRef}from"react";
 export function InputMoney({label,value,onChange,style,...props}){
+  const[local,setLocal]=useState("");
+  const focused=useRef(false);
+  useEffect(()=>{
+    if(!focused.current){
+      const n=parseFloat(String(value??"").replace(",","."));
+      setLocal(n>0?n.toFixed(2).replace(".",","):"");
+    }
+  },[value]);
   const handleChange=(e)=>{
-    const v=e.target.value.replace(/[^0-9.,]/g,"").replace(",",".");
-    onChange({target:{value:v}});
+    let v=e.target.value.replace(/[^0-9,]/g,"");
+    const pts=v.split(",");if(pts.length>2)v=pts[0]+","+pts.slice(1).join("");
+    setLocal(v);
+    const n=parseFloat(v.replace(",","."));
+    onChange({target:{value:!isNaN(n)?String(n):""}});
   };
   const handleBlur=(e)=>{
+    focused.current=false;
     e.target.style.borderColor="rgba(255,255,255,0.08)";e.target.style.boxShadow="none";
-    const n=parseFloat(e.target.value.replace(",","."));
-    onChange({target:{value:(!isNaN(n)&&n>=0)?n.toFixed(2):""}});
+    const n=parseFloat(local.replace(",","."));
+    const fmt=(!isNaN(n)&&n>0)?n.toFixed(2).replace(".",","):"";
+    setLocal(fmt);
+    onChange({target:{value:(!isNaN(n)&&n>0)?n.toFixed(2):""}});
   };
   return(<div style={{marginBottom:16}}>
     {label&&<label style={{display:"block",color:"#64748b",fontSize:11,marginBottom:6,fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{label}</label>}
-    <input type="text" inputMode="decimal" value={value??""} onChange={handleChange}
-      onFocus={e=>{e.target.style.borderColor="rgba(22,163,74,.7)";e.target.style.boxShadow="0 0 0 3px rgba(22,163,74,.15)"}}
+    <input type="text" inputMode="decimal" value={local} onChange={handleChange}
+      onFocus={e=>{focused.current=true;e.target.style.borderColor="rgba(22,163,74,.7)";e.target.style.boxShadow="0 0 0 3px rgba(22,163,74,.15)"}}
       onBlur={handleBlur}
       style={{width:"100%",padding:"13px 16px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,color:"#f1f5f9",fontSize:15,outline:"none",boxSizing:"border-box",transition:"border .2s,box-shadow .2s",WebkitAppearance:"none",colorScheme:"dark",...(style||{})}}
       {...props}/>
