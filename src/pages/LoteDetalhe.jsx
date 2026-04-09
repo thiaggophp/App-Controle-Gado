@@ -30,21 +30,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
   // Formulários
   const[buscaBrinco,setBuscaBrinco]=useState("");
-  const[animalForm,setAnimalForm]=useState({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:"",foto:""});
-
-  const handleFotoAnimal=(e)=>{
-    const file=e.target.files?.[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const img=new Image();
-      img.onload=()=>{
-        const maxW=800;const scale=Math.min(1,maxW/img.width);
-        const canvas=document.createElement("canvas");canvas.width=img.width*scale;canvas.height=img.height*scale;
-        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-        setAnimalForm(f=>({...f,foto:canvas.toDataURL("image/jpeg",0.7)}));
-      };img.src=ev.target.result;
-    };reader.readAsDataURL(file);
-  };
+  const[animalForm,setAnimalForm]=useState({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});
   const[editAnimal,setEditAnimal]=useState(null);
   const[pesagemForm,setPesagemForm]=useState({tipo:"lote",animalId:"",data:HOJE,peso:"",obs:""});
   const[custoForm,setCustoForm]=useState({data:HOJE,tipo:"Ração/Silagem",valor:"",descricao:""});
@@ -169,7 +155,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     {/* ── ABA: ANIMAIS ── */}
     {aba==="animais"&&<div>
       <div style={{display:"flex",gap:8,marginBottom:10}}>
-        <button onClick={()=>{setEditAnimal(null);setAnimalForm({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:"",foto:""});setAnimalModal(true)}} style={{flex:1,background:"linear-gradient(135deg,#16a34a,#15803d)",border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Adicionar Animal</button>
+        <button onClick={()=>{setEditAnimal(null);setAnimalForm({brinco:"",categoria:"Novilho/Novilha",sexo:"M",raca:"Nelore",pesoEntrada:"",dataEntrada:HOJE,obs:""});setAnimalModal(true)}} style={{flex:1,background:"linear-gradient(135deg,#16a34a,#15803d)",border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Adicionar Animal</button>
       </div>
       <input value={buscaBrinco} onChange={e=>setBuscaBrinco(e.target.value)} placeholder="🔍 Buscar por brinco..." style={{width:"100%",padding:"10px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,color:"#f1f5f9",fontSize:14,outline:"none",boxSizing:"border-box",marginBottom:10,colorScheme:"dark"}}/>
       {animaisAtivos.length>0&&<div style={{color:"#64748b",fontSize:11,fontWeight:700,letterSpacing:.8,marginBottom:8}}>ATIVOS ({animaisAtivos.length})</div>}
@@ -179,7 +165,6 @@ export default function LoteDetalhe({lote,user,onVoltar}){
         const pesoAtual=ultPes?ultPes.peso:a.pesoEntrada;
         const prontoAbate=pesoAtual>=450;
         return(<Card key={a.id} onClick={()=>abrirAnimal(a)}>
-          {a.foto&&<img src={a.foto} alt="foto" style={{width:"100%",height:100,objectFit:"cover",borderRadius:"8px 8px 0 0",marginBottom:8}}/>}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
@@ -309,15 +294,6 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
     {/* ── MODAIS ── */}
     <Modal open={animalModal} onClose={()=>setAnimalModal(false)} title={editAnimal?"Editar Animal":"Novo Animal"}>
-      <label style={{display:"block",marginBottom:16,cursor:"pointer",position:"relative"}}>
-        {animalForm.foto
-          ?<img src={animalForm.foto} alt="foto" style={{width:"100%",height:140,objectFit:"cover",borderRadius:14}}/>
-          :<div style={{width:"100%",height:100,background:"rgba(22,163,74,.06)",border:"2px dashed rgba(22,163,74,.25)",borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
-            <span style={{fontSize:32}}>📷</span>
-            <span style={{color:"#86efac",fontSize:13,fontWeight:600}}>Toque para fotografar</span>
-          </div>}
-        <input type="file" accept="image/*" capture="environment" onChange={handleFotoAnimal} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}}/>
-      </label>
       <Input label="Número do brinco" value={animalForm.brinco} onChange={e=>setAnimalForm({...animalForm,brinco:e.target.value})} placeholder="Ex: 0042"/>
       <Select label="Categoria" value={animalForm.categoria} onChange={e=>setAnimalForm({...animalForm,categoria:e.target.value})} options={CATEGORIAS.map(c=>({value:c,label:c}))}/>
       <Select label="Sexo" value={animalForm.sexo} onChange={e=>setAnimalForm({...animalForm,sexo:e.target.value})} options={SEXO}/>
