@@ -42,9 +42,9 @@ export default function Lotes({user,onAbrirLote}){
   const lotesFiltrados=lotes.filter(l=>filtro==="todos"||l.status===filtro);
 
   const diasEngorda=(l)=>{
-    const entrada=new Date(l.dataEntrada+"T12:00");
-    const hoje=new Date();
-    return Math.floor((hoje-entrada)/(1000*60*60*24));
+    const entrada=new Date(l.dataEntrada+"T00:00");
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    return Math.max(0,Math.floor((hoje-entrada)/(1000*60*60*24)));
   };
 
   return(<div style={{padding:"0 4px"}}>

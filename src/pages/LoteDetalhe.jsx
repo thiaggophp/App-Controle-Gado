@@ -316,7 +316,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
             <span style={{fontSize:32}}>📷</span>
             <span style={{color:"#86efac",fontSize:13,fontWeight:600}}>Toque para fotografar</span>
           </div>}
-        <input type="file" accept="image/*" onChange={handleFotoAnimal} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}}/>
+        <input type="file" accept="image/*" capture="environment" onChange={handleFotoAnimal} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}}/>
       </label>
       <Input label="Número do brinco" value={animalForm.brinco} onChange={e=>setAnimalForm({...animalForm,brinco:e.target.value})} placeholder="Ex: 0042"/>
       <Select label="Categoria" value={animalForm.categoria} onChange={e=>setAnimalForm({...animalForm,categoria:e.target.value})} options={CATEGORIAS.map(c=>({value:c,label:c}))}/>
