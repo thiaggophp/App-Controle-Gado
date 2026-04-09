@@ -1,5 +1,5 @@
 import{useState,useEffect}from"react";
-import{getAnimais,saveAnimal,deleteAnimal,getPesagens,savePesagem,deletePesagem,getCustos,saveCusto,deleteCusto,getVendas,saveVenda,deleteVenda,saveLote}from"../db";
+import{getAnimais,saveAnimal,deleteAnimal,getPesagens,savePesagem,deletePesagem,getCustos,saveCusto,deleteCusto,getVendas,saveVenda,saveLote}from"../db";
 import{Btn,Input,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
@@ -26,7 +26,6 @@ export default function LoteDetalhe({lote,user,onVoltar}){
   const[custoModal,setCustoModal]=useState(false);
   const[vendaModal,setVendaModal]=useState(false);
   const[deleteModal,setDeleteModal]=useState(null);
-  const[brincoScanner,setBrincoScanner]=useState(false);
   const[baixaModal,setBaixaModal]=useState(false);const[causaBaixa,setCausaBaixa]=useState("");
 
   // Formulários
@@ -310,6 +309,15 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
     {/* ── MODAIS ── */}
     <Modal open={animalModal} onClose={()=>setAnimalModal(false)} title={editAnimal?"Editar Animal":"Novo Animal"}>
+      <label style={{display:"block",marginBottom:16,cursor:"pointer",position:"relative"}}>
+        {animalForm.foto
+          ?<img src={animalForm.foto} alt="foto" style={{width:"100%",height:140,objectFit:"cover",borderRadius:14}}/>
+          :<div style={{width:"100%",height:100,background:"rgba(22,163,74,.06)",border:"2px dashed rgba(22,163,74,.25)",borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
+            <span style={{fontSize:32}}>📷</span>
+            <span style={{color:"#86efac",fontSize:13,fontWeight:600}}>Toque para fotografar</span>
+          </div>}
+        <input type="file" accept="image/*" onChange={handleFotoAnimal} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}}/>
+      </label>
       <Input label="Número do brinco" value={animalForm.brinco} onChange={e=>setAnimalForm({...animalForm,brinco:e.target.value})} placeholder="Ex: 0042"/>
       <Select label="Categoria" value={animalForm.categoria} onChange={e=>setAnimalForm({...animalForm,categoria:e.target.value})} options={CATEGORIAS.map(c=>({value:c,label:c}))}/>
       <Select label="Sexo" value={animalForm.sexo} onChange={e=>setAnimalForm({...animalForm,sexo:e.target.value})} options={SEXO}/>
@@ -317,13 +325,6 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       <Input label="Peso de entrada (kg)" type="number" value={animalForm.pesoEntrada} onChange={e=>setAnimalForm({...animalForm,pesoEntrada:e.target.value})} placeholder="0" inputMode="decimal"/>
       <Input label="Data de entrada" type="date" value={animalForm.dataEntrada} onChange={e=>setAnimalForm({...animalForm,dataEntrada:e.target.value})}/>
       <Input label="Observações" value={animalForm.obs||""} onChange={e=>setAnimalForm({...animalForm,obs:e.target.value})} placeholder="Opcional"/>
-      <div style={{marginBottom:16}}>
-        {animalForm.foto&&<img src={animalForm.foto} alt="preview" style={{width:"100%",height:100,objectFit:"cover",borderRadius:8,marginBottom:6}}/>}
-        <label style={{display:"flex",alignItems:"center",gap:8,background:"rgba(22,163,74,.08)",border:"1px solid rgba(22,163,74,.2)",borderRadius:10,padding:"8px 14px",cursor:"pointer",color:"#86efac",fontSize:13,fontWeight:600}}>
-          📷 {animalForm.foto?"Trocar foto":"Foto do animal"}
-          <input type="file" accept="image/*" capture="environment" onChange={handleFotoAnimal} style={{display:"none"}}/>
-        </label>
-      </div>
       {editAnimal&&editAnimal.status==="ativo"&&<Btn onClick={()=>{setCausaBaixa(CAUSAS_BAIXA[0]);setBaixaModal(true)}} color="rgba(239,68,68,.15)" style={{marginBottom:8,border:"1px solid rgba(239,68,68,.3)",color:"#ef4444"}}>Registrar Baixa</Btn>}
       <Btn onClick={salvarAnimal}>{editAnimal?"Salvar":"Cadastrar Animal"}</Btn>
     </Modal>
