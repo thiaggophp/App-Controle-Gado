@@ -1,3 +1,22 @@
+export function InputMoney({label,value,onChange,style,...props}){
+  const handleChange=(e)=>{
+    const v=e.target.value.replace(/[^0-9.,]/g,"").replace(",",".");
+    onChange({target:{value:v}});
+  };
+  const handleBlur=(e)=>{
+    e.target.style.borderColor="rgba(255,255,255,0.08)";e.target.style.boxShadow="none";
+    const n=parseFloat(e.target.value.replace(",","."));
+    onChange({target:{value:(!isNaN(n)&&n>=0)?n.toFixed(2):""}});
+  };
+  return(<div style={{marginBottom:16}}>
+    {label&&<label style={{display:"block",color:"#64748b",fontSize:11,marginBottom:6,fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{label}</label>}
+    <input type="text" inputMode="decimal" value={value??""} onChange={handleChange}
+      onFocus={e=>{e.target.style.borderColor="rgba(22,163,74,.7)";e.target.style.boxShadow="0 0 0 3px rgba(22,163,74,.15)"}}
+      onBlur={handleBlur}
+      style={{width:"100%",padding:"13px 16px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,color:"#f1f5f9",fontSize:15,outline:"none",boxSizing:"border-box",transition:"border .2s,box-shadow .2s",WebkitAppearance:"none",colorScheme:"dark",...(style||{})}}
+      {...props}/>
+  </div>)
+}
 export function Input({label,style,onFocus,onBlur,...props}){
   return(<div style={{marginBottom:16}}>
     {label&&<label style={{display:"block",color:"#64748b",fontSize:11,marginBottom:6,fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{label}</label>}

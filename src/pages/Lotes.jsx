@@ -1,6 +1,6 @@
 import{useState,useEffect}from"react";
 import{getLotes,saveLote,deleteLote,getFazendas,saveFazenda}from"../db";
-import{Btn,Input,Select}from"../components/FormElements";
+import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
 
@@ -99,8 +99,8 @@ export default function Lotes({user,onAbrirLote}){
       <Input label="Data de entrada" type="date" value={form.dataEntrada} onChange={e=>setForm({...form,dataEntrada:e.target.value})}/>
       <Select label="Raça predominante" value={form.racaPredominante} onChange={e=>setForm({...form,racaPredominante:e.target.value})} options={RACAS.map(r=>({value:r,label:r}))}/>
       <Input label="Quantidade de cabeças na entrada" type="number" value={form.qtdEntrada} onChange={e=>setForm({...form,qtdEntrada:e.target.value})} placeholder="0" inputMode="numeric"/>
-      <Input label="Peso médio de entrada (kg)" type="number" value={form.pesoMedioEntrada} onChange={e=>setForm({...form,pesoMedioEntrada:e.target.value})} placeholder="0" inputMode="decimal"/>
-      <Input label="Valor por cabeça (R$)" type="number" value={form.valorCabeca} onChange={e=>setForm({...form,valorCabeca:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Peso médio de entrada (kg)" value={form.pesoMedioEntrada} onChange={e=>setForm({...form,pesoMedioEntrada:e.target.value})} placeholder="0,00"/>
+      <InputMoney label="Valor por cabeça (R$)" value={form.valorCabeca} onChange={e=>setForm({...form,valorCabeca:e.target.value})} placeholder="0,00"/>
       <div style={{marginBottom:16}}>
         <label style={{display:"block",color:"#64748b",fontSize:11,marginBottom:6,fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>Fazenda</label>
         <div style={{display:"flex",gap:8}}>

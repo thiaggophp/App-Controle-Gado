@@ -1,6 +1,6 @@
 import{useState,useEffect}from"react";
 import{getAnimais,saveAnimal,deleteAnimal,getPesagens,savePesagem,deletePesagem,getCustos,saveCusto,deleteCusto,getVendas,saveVenda,saveLote}from"../db";
-import{Btn,Input,Select}from"../components/FormElements";
+import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
 
@@ -265,7 +265,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
           <div>
             <div style={{color:"#64748b",fontSize:11,marginBottom:4}}>Valor/@(R$)</div>
-            <input type="number" value={simValorArroba} onChange={e=>setSimValorArroba(e.target.value)} placeholder="ex: 320" inputMode="decimal" style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,color:"#f1f5f9",fontSize:14,outline:"none",boxSizing:"border-box",colorScheme:"dark"}}/>
+            <input type="text" inputMode="decimal" value={simValorArroba} onChange={e=>setSimValorArroba(e.target.value.replace(/[^0-9.,]/g,"").replace(",","."))} onBlur={e=>{const n=parseFloat(e.target.value);if(!isNaN(n)&&n>0)setSimValorArroba(n.toFixed(2))}} placeholder="ex: 320,00" style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,color:"#f1f5f9",fontSize:14,outline:"none",boxSizing:"border-box",colorScheme:"dark"}}/>
           </div>
           <div>
             <div style={{color:"#64748b",fontSize:11,marginBottom:4}}>Rendimento carcaça %</div>
@@ -298,7 +298,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       <Select label="Categoria" value={animalForm.categoria} onChange={e=>setAnimalForm({...animalForm,categoria:e.target.value})} options={CATEGORIAS.map(c=>({value:c,label:c}))}/>
       <Select label="Sexo" value={animalForm.sexo} onChange={e=>setAnimalForm({...animalForm,sexo:e.target.value})} options={SEXO}/>
       <Select label="Raça" value={animalForm.raca} onChange={e=>setAnimalForm({...animalForm,raca:e.target.value})} options={RACAS.map(r=>({value:r,label:r}))}/>
-      <Input label="Peso de entrada (kg)" type="number" value={animalForm.pesoEntrada} onChange={e=>setAnimalForm({...animalForm,pesoEntrada:e.target.value})} placeholder="0" inputMode="decimal"/>
+      <InputMoney label="Peso de entrada (kg)" value={animalForm.pesoEntrada} onChange={e=>setAnimalForm({...animalForm,pesoEntrada:e.target.value})} placeholder="0,00"/>
       <Input label="Data de entrada" type="date" value={animalForm.dataEntrada} onChange={e=>setAnimalForm({...animalForm,dataEntrada:e.target.value})}/>
       <Input label="Observações" value={animalForm.obs||""} onChange={e=>setAnimalForm({...animalForm,obs:e.target.value})} placeholder="Opcional"/>
       {editAnimal&&editAnimal.status==="ativo"&&<Btn onClick={()=>{setCausaBaixa(CAUSAS_BAIXA[0]);setBaixaModal(true)}} color="rgba(239,68,68,.15)" style={{marginBottom:8,border:"1px solid rgba(239,68,68,.3)",color:"#ef4444"}}>Registrar Baixa</Btn>}
@@ -313,7 +313,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       </div>
       {pesagemForm.tipo==="individual"&&<Select label="Animal (brinco)" value={pesagemForm.animalId} onChange={e=>setPesagemForm({...pesagemForm,animalId:e.target.value})} options={[{value:"",label:"— Selecione —"},...animaisAtivos.map(a=>({value:a.id,label:a.brinco+" - "+a.raca}))]}/>}
       <Input label="Data da pesagem" type="date" value={pesagemForm.data} onChange={e=>setPesagemForm({...pesagemForm,data:e.target.value})}/>
-      <Input label="Peso (kg)" type="number" value={pesagemForm.peso} onChange={e=>setPesagemForm({...pesagemForm,peso:e.target.value})} placeholder="0" inputMode="decimal"/>
+      <InputMoney label="Peso (kg)" value={pesagemForm.peso} onChange={e=>setPesagemForm({...pesagemForm,peso:e.target.value})} placeholder="0,00"/>
       <Input label="Observações" value={pesagemForm.obs||""} onChange={e=>setPesagemForm({...pesagemForm,obs:e.target.value})} placeholder="Opcional"/>
       <Btn onClick={salvarPesagem}>Salvar Pesagem</Btn>
     </Modal>
@@ -321,7 +321,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     <Modal open={custoModal} onClose={()=>setCustoModal(false)} title={editCusto?"Editar Custo":"Registrar Custo"}>
       <Input label="Data" type="date" value={custoForm.data} onChange={e=>setCustoForm({...custoForm,data:e.target.value})}/>
       <Select label="Tipo de custo" value={custoForm.tipo} onChange={e=>setCustoForm({...custoForm,tipo:e.target.value})} options={TIPOS_CUSTO.map(t=>({value:t,label:t}))}/>
-      <Input label="Valor (R$)" type="number" value={custoForm.valor} onChange={e=>setCustoForm({...custoForm,valor:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Valor (R$)" value={custoForm.valor} onChange={e=>setCustoForm({...custoForm,valor:e.target.value})} placeholder="0,00"/>
       <Input label="Descrição (opcional)" value={custoForm.descricao||""} onChange={e=>setCustoForm({...custoForm,descricao:e.target.value})} placeholder="Fornecedor, quantidade..."/>
       <Btn onClick={salvarCusto}>{editCusto?"Salvar":"Registrar Custo"}</Btn>
     </Modal>
@@ -329,8 +329,8 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     <Modal open={vendaModal} onClose={()=>setVendaModal(false)} title="Registrar Venda">
       <Input label="Data da venda" type="date" value={vendaForm.data} onChange={e=>setVendaForm({...vendaForm,data:e.target.value})}/>
       <Input label="Quantidade de animais vendidos" type="number" value={vendaForm.qtdAnimais} onChange={e=>setVendaForm({...vendaForm,qtdAnimais:e.target.value})} placeholder="0" inputMode="numeric"/>
-      <Input label="Total de arrobas (@)" type="number" value={vendaForm.arrobas} onChange={e=>setVendaForm({...vendaForm,arrobas:e.target.value})} placeholder="0" inputMode="decimal"/>
-      <Input label="Valor por arroba (R$/@)" type="number" value={vendaForm.valorArroba} onChange={e=>setVendaForm({...vendaForm,valorArroba:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Total de arrobas (@)" value={vendaForm.arrobas} onChange={e=>setVendaForm({...vendaForm,arrobas:e.target.value})} placeholder="0,00"/>
+      <InputMoney label="Valor por arroba (R$/@)" value={vendaForm.valorArroba} onChange={e=>setVendaForm({...vendaForm,valorArroba:e.target.value})} placeholder="0,00"/>
       {vendaForm.arrobas&&vendaForm.valorArroba&&<div style={{background:"rgba(22,163,74,.1)",borderRadius:12,padding:"10px 14px",marginBottom:16,display:"flex",justifyContent:"space-between"}}>
         <span style={{color:"#86efac",fontSize:13}}>Total da venda</span>
         <span style={{color:"#22c55e",fontWeight:800}}>R$ {fmt((parseFloat(vendaForm.arrobas)||0)*(parseFloat(vendaForm.valorArroba)||0))}</span>
