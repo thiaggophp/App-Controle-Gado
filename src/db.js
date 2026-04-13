@@ -118,6 +118,35 @@ export async function importAllData(data){
   }
 }
 
+// ─── CASCADE DELETE ───
+export async function deleteAnimalCascade(animalId){
+  const pesagens=await getPesagensAnimal(animalId);
+  for(const p of pesagens)await deletePesagem(p.id);
+  await deleteAnimal(animalId);
+}
+export async function deleteLoteCascade(loteId){
+  const animais=await getAnimais(loteId);
+  for(const a of animais)await deleteAnimalCascade(a.id);
+  const pesagens=await getPesagens(loteId);
+  for(const p of pesagens)await deletePesagem(p.id);
+  const custos=await getCustos(loteId);
+  for(const c of custos)await deleteCusto(c.id);
+  const vendas=await getVendas(loteId);
+  for(const v of vendas)await deleteVenda(v.id);
+  const saude=await getSaude(loteId);
+  for(const s of saude)await deleteSaude(s.id);
+  await deleteLote(loteId);
+}
+export async function deleteUserCascade(email){
+  try{
+    const lotes=await getLotes(email);
+    for(const l of lotes)await deleteLoteCascade(l.id);
+    const fazendas=await getFazendas(email);
+    for(const f of fazendas)await deleteFazenda(f.id);
+    await deleteAccount(email);
+  }catch{}
+}
+
 // ─── INIT ADMIN ───
 export async function initAdmin(){
   // Admin account is created once via API — no credentials compiled into the bundle

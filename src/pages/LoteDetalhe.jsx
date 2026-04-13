@@ -1,5 +1,5 @@
 import{useState,useEffect}from"react";
-import{getAnimais,saveAnimal,deleteAnimal,getPesagens,savePesagem,deletePesagem,getCustos,saveCusto,deleteCusto,getVendas,saveVenda,saveLote}from"../db";
+import{getAnimais,saveAnimal,deleteAnimalCascade,getPesagens,savePesagem,deletePesagem,getCustos,saveCusto,deleteCusto,getVendas,saveVenda,saveLote}from"../db";
 import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
@@ -51,7 +51,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     if(editAnimal)a.id=editAnimal.id;
     await saveAnimal(a);setAnimalModal(false);setEditAnimal(null);await recarregar();
   };
-  const excluirAnimal=async()=>{await deleteAnimal(deleteModal.id);setDeleteModal(null);await recarregar()};
+  const excluirAnimal=async()=>{await deleteAnimalCascade(deleteModal.id);setDeleteModal(null);await recarregar()};
   const abrirAnimal=(a)=>{setEditAnimal(a);setAnimalForm({...a,categoria:a.categoria||"Novilho/Novilha",pesoEntrada:String(a.pesoEntrada)});setAnimalModal(true)};
   const baixaAnimal=async(a,causa)=>{await saveAnimal({...a,status:"baixa",causaBaixa:causa});await recarregar()};
 

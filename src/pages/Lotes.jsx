@@ -1,5 +1,5 @@
 import{useState,useEffect}from"react";
-import{getLotes,saveLote,deleteLote,getFazendas,saveFazenda}from"../db";
+import{getLotes,saveLote,deleteLoteCascade,getFazendas,saveFazenda}from"../db";
 import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
@@ -31,7 +31,7 @@ export default function Lotes({user,onAbrirLote}){
     await saveLote(l);setModal(false);await recarregar();
   };
 
-  const excluir=async(l)=>{await deleteLote(l.id);setDeleteModal(null);await recarregar()};
+  const excluir=async(l)=>{await deleteLoteCascade(l.id);setDeleteModal(null);await recarregar()};
 
   const salvarFazenda=async()=>{
     if(!nomeFazenda.trim())return;

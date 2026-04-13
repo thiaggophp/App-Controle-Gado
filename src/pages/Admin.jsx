@@ -1,5 +1,5 @@
 import{useState,useEffect}from"react";
-import{getAllAccounts,saveAccount,deleteAccount,getSignupRequests,deleteSignupRequest,pb}from"../db";
+import{getAllAccounts,saveAccount,deleteAccount,deleteUserCascade,getSignupRequests,deleteSignupRequest,pb}from"../db";
 import{sendPasswordEmail,generatePassword}from"../emailService";
 import{Btn,Input}from"../components/FormElements";
 import Modal from"../components/Modal";
@@ -59,7 +59,7 @@ export default function Admin({currentUser}){
 
   const handleDelete=async(acc)=>{
     if(acc.protected)return;
-    await deleteAccount(acc.email);setDeleteModal(null);await load();
+    await deleteUserCascade(acc.email);setDeleteModal(null);await load();
   };
 
   const handleChangePass=async()=>{
