@@ -10,7 +10,6 @@ import Config from"./pages/Config";
 import Admin from"./pages/Admin";
 import Modal from"./components/Modal";
 import{Btn,Input}from"./components/FormElements";
-import InstallBanner from"./components/InstallBanner";
 
 const ABAS=[
   {id:"dashboard",label:"Início",icon:"🏠"},
@@ -122,7 +121,6 @@ export default function App(){
       })}
     </div>
 
-    <InstallBanner/>
     <Modal open={senhaModal} onClose={()=>{}} title="Redefina sua senha">
       <p style={{color:"#94a3b8",fontSize:13,marginBottom:16}}>Você precisa criar uma nova senha antes de continuar.</p>
       {senhaMsg&&<div style={{color:"#ef4444",fontSize:12,marginBottom:10,background:"rgba(239,68,68,.1)",padding:"8px 12px",borderRadius:10}}>{senhaMsg}</div>}
