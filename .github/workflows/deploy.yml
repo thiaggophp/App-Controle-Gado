@@ -16,7 +16,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /var/www/gado-controle
-            git pull
+            git fetch origin
+            git reset --hard origin/main
             npm install
             npm run build
             BUILD_TS=$(date +%s)
