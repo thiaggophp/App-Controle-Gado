@@ -102,7 +102,11 @@ export default function Precos(){
     setLoading(false);
   },[]);
 
-  useEffect(()=>{buscar(false)},[buscar]);
+  useEffect(()=>{
+    buscar(false);
+    const intervalo=setInterval(()=>{if(isPregaoAberto())buscar(false)},5*60*1000);
+    return()=>clearInterval(intervalo);
+  },[buscar]);
 
   // Pré-visualização do período
   const periodoData=parseMesAno(mesVendaStr);
