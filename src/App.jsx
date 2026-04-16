@@ -7,6 +7,7 @@ import LoteDetalhe from"./pages/LoteDetalhe";
 import Saude from"./pages/Saude";
 import Relatorios from"./pages/Relatorios";
 import Config from"./pages/Config";
+import Precos from"./pages/Precos";
 import Admin from"./pages/Admin";
 import Modal from"./components/Modal";
 import{Btn,Input}from"./components/FormElements";
@@ -16,9 +17,10 @@ const ABAS=[
   {id:"lotes",label:"Lotes",icon:"🐄"},
   {id:"saude",label:"Saúde",icon:"💉"},
   {id:"relatorios",label:"Relatórios",icon:"📊"},
+  {id:"precos",label:"Preços",icon:"📈"},
   {id:"config",label:"Config",icon:"⚙️"},
 ];
-const ABAS_VALIDAS=["dashboard","lotes","saude","relatorios","config","admin"];
+const ABAS_VALIDAS=["dashboard","lotes","saude","relatorios","precos","config","admin"];
 const getHashAba=()=>{const h=window.location.hash.slice(1);return ABAS_VALIDAS.includes(h)?h:"dashboard"};
 
 export default function App(){
@@ -34,7 +36,7 @@ export default function App(){
     initAdmin().catch(()=>{});
     const salvo=localStorage.getItem("gado_usuario");
     if(salvo){
-      const cache=JSON.parse(salvo);
+      let cache;try{cache=JSON.parse(salvo)}catch{localStorage.removeItem("gado_usuario");setPronto(true);return}
       try{
         const atualizado=await getAccount(cache.email);
         if(!atualizado||atualizado.status==="blocked"){localStorage.removeItem("gado_usuario")}
@@ -93,6 +95,7 @@ export default function App(){
       case"dashboard":return<Dashboard user={usuario}/>;
       case"saude":return<Saude user={usuario}/>;
       case"relatorios":return<Relatorios user={usuario}/>;
+      case"precos":return<Precos/>;
       case"config":return<Config user={usuario} onAtualizar={u=>setUsuario({...u})}/>;
       case"admin":return<Admin currentUser={usuario}/>;
       default:return<Dashboard user={usuario}/>;

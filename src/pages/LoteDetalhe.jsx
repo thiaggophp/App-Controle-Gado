@@ -37,6 +37,8 @@ export default function LoteDetalhe({lote,user,onVoltar}){
   const[editCusto,setEditCusto]=useState(null);
   const[vendaForm,setVendaForm]=useState({data:HOJE,qtdAnimais:"",arrobas:"",valorArroba:"",comprador:"",obs:""});
   const[simValorArroba,setSimValorArroba]=useState("");const[simRendimento,setSimRendimento]=useState("50");
+  const[saving,setSaving]=useState(false);
+  const[saveErr,setSaveErr]=useState("");
 
   const recarregar=async()=>{
     const[a,p,c,v]=await Promise.all([getAnimais(lote.id),getPesagens(lote.id),getCustos(lote.id),getVendas(lote.id)]);
@@ -47,45 +49,61 @@ export default function LoteDetalhe({lote,user,onVoltar}){
   // ── ANIMAIS ──
   const salvarAnimal=async()=>{
     if(!animalForm.brinco.trim())return;
-    const a={...animalForm,ownerEmail:user.email,loteId:lote.id,pesoEntrada:parseFloat(animalForm.pesoEntrada)||0,status:"ativo"};
-    if(editAnimal)a.id=editAnimal.id;
-    await saveAnimal(a);setAnimalModal(false);setEditAnimal(null);await recarregar();
+    setSaving(true);setSaveErr("");
+    try{
+      const a={...animalForm,ownerEmail:user.email,loteId:lote.id,pesoEntrada:parseFloat(animalForm.pesoEntrada)||0,status:"ativo"};
+      if(editAnimal)a.id=editAnimal.id;
+      await saveAnimal(a);setAnimalModal(false);setEditAnimal(null);await recarregar();
+    }catch{setSaveErr("Erro ao salvar animal. Verifique a conexão.")}
+    setSaving(false);
   };
-  const excluirAnimal=async()=>{await deleteAnimalCascade(deleteModal.id);setDeleteModal(null);await recarregar()};
-  const abrirAnimal=(a)=>{setEditAnimal(a);setAnimalForm({...a,categoria:a.categoria||"Novilho/Novilha",pesoEntrada:String(a.pesoEntrada)});setAnimalModal(true)};
+  const excluirAnimal=async()=>{setSaving(true);await deleteAnimalCascade(deleteModal.id);setDeleteModal(null);await recarregar();setSaving(false)};
+  const abrirAnimal=(a)=>{setEditAnimal(a);setAnimalForm({...a,categoria:a.categoria||"Novilho/Novilha",pesoEntrada:String(a.pesoEntrada)});setSaveErr("");setAnimalModal(true)};
   const baixaAnimal=async(a,causa)=>{await saveAnimal({...a,status:"baixa",causaBaixa:causa});await recarregar()};
 
   // ── PESAGENS ──
   const salvarPesagem=async()=>{
     if(!pesagemForm.peso)return;
-    const p={...pesagemForm,ownerEmail:user.email,loteId:lote.id,peso:parseFloat(pesagemForm.peso)||0};
-    if(p.tipo==="lote")p.animalId="";
-    await savePesagem(p);setPesagemModal(false);await recarregar();
+    if(pesagemForm.tipo==="individual"&&!pesagemForm.animalId)return;
+    setSaving(true);setSaveErr("");
+    try{
+      const p={...pesagemForm,ownerEmail:user.email,loteId:lote.id,peso:parseFloat(pesagemForm.peso)||0};
+      if(p.tipo==="lote")p.animalId="";
+      await savePesagem(p);setPesagemModal(false);await recarregar();
+    }catch{setSaveErr("Erro ao salvar pesagem.")}
+    setSaving(false);
   };
 
   // ── CUSTOS ──
   const salvarCusto=async()=>{
     if(!custoForm.valor)return;
-    const c={...custoForm,ownerEmail:user.email,loteId:lote.id,valor:parseFloat(custoForm.valor)||0};
-    if(editCusto)c.id=editCusto.id;
-    await saveCusto(c);setCustoModal(false);setEditCusto(null);await recarregar();
+    setSaving(true);setSaveErr("");
+    try{
+      const c={...custoForm,ownerEmail:user.email,loteId:lote.id,valor:parseFloat(custoForm.valor)||0};
+      if(editCusto)c.id=editCusto.id;
+      await saveCusto(c);setCustoModal(false);setEditCusto(null);await recarregar();
+    }catch{setSaveErr("Erro ao salvar custo.")}
+    setSaving(false);
   };
-  const excluirCusto=async()=>{await deleteCusto(deleteModal.id);setDeleteModal(null);await recarregar()};
+  const excluirCusto=async()=>{setSaving(true);await deleteCusto(deleteModal.id);setDeleteModal(null);await recarregar();setSaving(false)};
 
   // ── VENDAS ──
   const salvarVenda=async()=>{
     if(!vendaForm.arrobas||!vendaForm.valorArroba)return;
-    const arrobas=parseFloat(vendaForm.arrobas)||0;
-    const valorArroba=parseFloat(vendaForm.valorArroba)||0;
-    const total=arrobas*valorArroba;
-    const v={...vendaForm,ownerEmail:user.email,loteId:lote.id,qtdAnimais:parseInt(vendaForm.qtdAnimais)||0,arrobas,valorArroba,total};
-    await saveVenda(v);
-    // Atualizar status do lote
-    const animaisAtivos=animais.filter(a=>a.status==="ativo").length;
-    const vendidos=vendas.reduce((s,v)=>s+v.qtdAnimais,0)+(parseInt(vendaForm.qtdAnimais)||0);
-    if(vendidos>=animaisAtivos)await saveLote({...lote,status:"vendido"});
-    else if(vendidos>0)await saveLote({...lote,status:"parcial"});
-    setVendaModal(false);await recarregar();
+    setSaving(true);setSaveErr("");
+    try{
+      const arrobas=parseFloat(vendaForm.arrobas)||0;
+      const valorArroba=parseFloat(vendaForm.valorArroba)||0;
+      const total=arrobas*valorArroba;
+      const v={...vendaForm,ownerEmail:user.email,loteId:lote.id,qtdAnimais:parseInt(vendaForm.qtdAnimais)||0,arrobas,valorArroba,total};
+      await saveVenda(v);
+      const animaisAtivos=animais.filter(a=>a.status==="ativo").length;
+      const vendidos=vendas.reduce((s,v)=>s+v.qtdAnimais,0)+(parseInt(vendaForm.qtdAnimais)||0);
+      if(vendidos>=animaisAtivos)await saveLote({...lote,status:"vendido"});
+      else if(vendidos>0)await saveLote({...lote,status:"parcial"});
+      setVendaModal(false);await recarregar();
+    }catch{setSaveErr("Erro ao salvar venda.")}
+    setSaving(false);
   };
 
   // ── CÁLCULOS ──
@@ -172,7 +190,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
                 {prontoAbate&&<span style={{background:"rgba(34,197,94,.15)",color:"#22c55e",fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:10}}>✓ Pronto p/ abate</span>}
               </div>
               <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{a.categoria||"—"} · {a.raca} · {a.sexo==="M"?"Macho":"Fêmea"}</div>
-              {g&&<div style={{color:"#4ade80",fontSize:11,marginTop:2,fontWeight:600}}>GMD: +{g} kg/dia</div>}
+              {g&&parseFloat(g)>0&&<div style={{color:"#4ade80",fontSize:11,marginTop:2,fontWeight:600}}>GMD: +{g} kg/dia</div>}
             </div>
             <div style={{textAlign:"right"}}>
               <div style={{color:prontoAbate?"#22c55e":"#94a3b8",fontSize:13,fontWeight:700}}>{fmt(pesoAtual)} kg</div>
@@ -293,7 +311,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     </div>}
 
     {/* ── MODAIS ── */}
-    <Modal open={animalModal} onClose={()=>setAnimalModal(false)} title={editAnimal?"Editar Animal":"Novo Animal"}>
+    <Modal open={animalModal} onClose={()=>{setAnimalModal(false);setSaveErr("")}} title={editAnimal?"Editar Animal":"Novo Animal"}>
       <Input label="Número do brinco" value={animalForm.brinco} onChange={e=>setAnimalForm({...animalForm,brinco:e.target.value})} placeholder="Ex: 0042"/>
       <Select label="Categoria" value={animalForm.categoria} onChange={e=>setAnimalForm({...animalForm,categoria:e.target.value})} options={CATEGORIAS.map(c=>({value:c,label:c}))}/>
       <Select label="Sexo" value={animalForm.sexo} onChange={e=>setAnimalForm({...animalForm,sexo:e.target.value})} options={SEXO}/>
@@ -301,11 +319,12 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       <InputMoney label="Peso de entrada (kg)" value={animalForm.pesoEntrada} onChange={e=>setAnimalForm({...animalForm,pesoEntrada:e.target.value})} placeholder="0,00"/>
       <Input label="Data de entrada" type="date" value={animalForm.dataEntrada} onChange={e=>setAnimalForm({...animalForm,dataEntrada:e.target.value})}/>
       <Input label="Observações" value={animalForm.obs||""} onChange={e=>setAnimalForm({...animalForm,obs:e.target.value})} placeholder="Opcional"/>
-      {editAnimal&&editAnimal.status==="ativo"&&<Btn onClick={()=>{setCausaBaixa(CAUSAS_BAIXA[0]);setBaixaModal(true)}} color="rgba(239,68,68,.15)" style={{marginBottom:8,border:"1px solid rgba(239,68,68,.3)",color:"#ef4444"}}>Registrar Baixa</Btn>}
-      <Btn onClick={salvarAnimal}>{editAnimal?"Salvar":"Cadastrar Animal"}</Btn>
+      {saveErr&&<div style={{color:"#f87171",fontSize:12,marginBottom:10,background:"rgba(239,68,68,.1)",padding:"8px 12px",borderRadius:10}}>{saveErr}</div>}
+      {editAnimal&&editAnimal.status==="ativo"&&<Btn onClick={()=>{setCausaBaixa(CAUSAS_BAIXA[0]);setBaixaModal(true)}} color="rgba(239,68,68,.15)" style={{marginBottom:8,border:"1px solid rgba(239,68,68,.3)",color:"#ef4444"}} disabled={saving}>Registrar Baixa</Btn>}
+      <Btn onClick={salvarAnimal} disabled={saving}>{saving?"Salvando...":(editAnimal?"Salvar":"Cadastrar Animal")}</Btn>
     </Modal>
 
-    <Modal open={pesagemModal} onClose={()=>setPesagemModal(false)} title="Registrar Pesagem">
+    <Modal open={pesagemModal} onClose={()=>{setPesagemModal(false);setSaveErr("")}} title="Registrar Pesagem">
       <div style={{display:"flex",gap:8,marginBottom:16}}>
         {[{v:"lote",l:"Peso médio do lote"},{v:"individual",l:"Animal individual"}].map(t=><button key={t.v} onClick={()=>setPesagemForm({...pesagemForm,tipo:t.v,animalId:""})}
           style={{flex:1,padding:"10px",borderRadius:12,border:"2px solid",borderColor:pesagemForm.tipo===t.v?"#16a34a":"rgba(255,255,255,0.07)",background:pesagemForm.tipo===t.v?"rgba(22,163,74,.12)":"transparent",color:pesagemForm.tipo===t.v?"#4ade80":"#64748b",fontWeight:700,fontSize:12,cursor:"pointer"}}>
@@ -315,18 +334,20 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       <Input label="Data da pesagem" type="date" value={pesagemForm.data} onChange={e=>setPesagemForm({...pesagemForm,data:e.target.value})}/>
       <InputMoney label="Peso (kg)" value={pesagemForm.peso} onChange={e=>setPesagemForm({...pesagemForm,peso:e.target.value})} placeholder="0,00"/>
       <Input label="Observações" value={pesagemForm.obs||""} onChange={e=>setPesagemForm({...pesagemForm,obs:e.target.value})} placeholder="Opcional"/>
-      <Btn onClick={salvarPesagem}>Salvar Pesagem</Btn>
+      {saveErr&&<div style={{color:"#f87171",fontSize:12,marginBottom:10,background:"rgba(239,68,68,.1)",padding:"8px 12px",borderRadius:10}}>{saveErr}</div>}
+      <Btn onClick={salvarPesagem} disabled={saving}>{saving?"Salvando...":"Salvar Pesagem"}</Btn>
     </Modal>
 
-    <Modal open={custoModal} onClose={()=>setCustoModal(false)} title={editCusto?"Editar Custo":"Registrar Custo"}>
+    <Modal open={custoModal} onClose={()=>{setCustoModal(false);setSaveErr("")}} title={editCusto?"Editar Custo":"Registrar Custo"}>
       <Input label="Data" type="date" value={custoForm.data} onChange={e=>setCustoForm({...custoForm,data:e.target.value})}/>
       <Select label="Tipo de custo" value={custoForm.tipo} onChange={e=>setCustoForm({...custoForm,tipo:e.target.value})} options={TIPOS_CUSTO.map(t=>({value:t,label:t}))}/>
       <InputMoney label="Valor (R$)" value={custoForm.valor} onChange={e=>setCustoForm({...custoForm,valor:e.target.value})} placeholder="0,00"/>
       <Input label="Descrição (opcional)" value={custoForm.descricao||""} onChange={e=>setCustoForm({...custoForm,descricao:e.target.value})} placeholder="Fornecedor, quantidade..."/>
-      <Btn onClick={salvarCusto}>{editCusto?"Salvar":"Registrar Custo"}</Btn>
+      {saveErr&&<div style={{color:"#f87171",fontSize:12,marginBottom:10,background:"rgba(239,68,68,.1)",padding:"8px 12px",borderRadius:10}}>{saveErr}</div>}
+      <Btn onClick={salvarCusto} disabled={saving}>{saving?"Salvando...":(editCusto?"Salvar":"Registrar Custo")}</Btn>
     </Modal>
 
-    <Modal open={vendaModal} onClose={()=>setVendaModal(false)} title="Registrar Venda">
+    <Modal open={vendaModal} onClose={()=>{setVendaModal(false);setSaveErr("")}} title="Registrar Venda">
       <Input label="Data da venda" type="date" value={vendaForm.data} onChange={e=>setVendaForm({...vendaForm,data:e.target.value})}/>
       <Input label="Quantidade de animais vendidos" type="number" value={vendaForm.qtdAnimais} onChange={e=>setVendaForm({...vendaForm,qtdAnimais:e.target.value})} placeholder="0" inputMode="numeric"/>
       <InputMoney label="Total de arrobas (@)" value={vendaForm.arrobas} onChange={e=>setVendaForm({...vendaForm,arrobas:e.target.value})} placeholder="0,00"/>
@@ -337,7 +358,8 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       </div>}
       <Input label="Comprador" value={vendaForm.comprador||""} onChange={e=>setVendaForm({...vendaForm,comprador:e.target.value})} placeholder="Nome do frigorífico ou comprador"/>
       <Input label="Observações" value={vendaForm.obs||""} onChange={e=>setVendaForm({...vendaForm,obs:e.target.value})} placeholder="Opcional"/>
-      <Btn onClick={salvarVenda}>Confirmar Venda</Btn>
+      {saveErr&&<div style={{color:"#f87171",fontSize:12,marginBottom:10,background:"rgba(239,68,68,.1)",padding:"8px 12px",borderRadius:10}}>{saveErr}</div>}
+      <Btn onClick={salvarVenda} disabled={saving}>{saving?"Salvando...":"Confirmar Venda"}</Btn>
     </Modal>
 
     <Modal open={baixaModal} onClose={()=>setBaixaModal(false)} title="Registrar Baixa">

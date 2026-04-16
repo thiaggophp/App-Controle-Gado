@@ -73,6 +73,7 @@ export async function deleteVenda(id){try{await pb.collection("gado_vendas").del
 
 // ─── SAÚDE ───
 export async function getSaude(loteId){try{return await pb.collection("gado_saude").getFullList({filter:`loteId="${loteId}"`})}catch{return[]}}
+export async function getSaudeAnimal(animalId){try{return await pb.collection("gado_saude").getFullList({filter:`animalId="${animalId}"`})}catch{return[]}}
 export async function saveSaude(s){
   if(s.id)return pb.collection("gado_saude").update(s.id,s);
   const c=await pb.collection("gado_saude").create(s);s.id=c.id;return c;
@@ -122,6 +123,8 @@ export async function importAllData(data){
 export async function deleteAnimalCascade(animalId){
   const pesagens=await getPesagensAnimal(animalId);
   for(const p of pesagens)await deletePesagem(p.id);
+  const saude=await getSaudeAnimal(animalId);
+  for(const s of saude)await deleteSaude(s.id);
   await deleteAnimal(animalId);
 }
 export async function deleteLoteCascade(loteId){

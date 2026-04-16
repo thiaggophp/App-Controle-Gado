@@ -13,6 +13,7 @@ export default function Saude({user}){
   const[lotes,setLotes]=useState([]);const[loteId,setLoteId]=useState("");
   const[registros,setRegistros]=useState([]);const[animais,setAnimais]=useState([]);
   const[modal,setModal]=useState(false);const[deleteModal,setDeleteModal]=useState(null);
+  const[saving,setSaving]=useState(false);
   const[form,setForm]=useState({data:HOJE,tipo:"vacina",animalId:"",produto:"",dose:"",proxDose:"",obs:""});
 
   useEffect(()=>{(async()=>{
@@ -31,9 +32,10 @@ export default function Saude({user}){
   };
 
   const salvar=async()=>{
-    if(!form.produto.trim())return;
+    if(!form.produto.trim()||saving)return;
+    setSaving(true);
     await saveSaude({...form,ownerEmail:user.email,loteId});
-    setModal(false);await recarregar();
+    setModal(false);await recarregar();setSaving(false);
   };
 
   const hoje=new Date().toISOString().slice(0,10);
@@ -96,7 +98,7 @@ export default function Saude({user}){
       <Input label="Dose / Quantidade" value={form.dose||""} onChange={e=>setForm({...form,dose:e.target.value})} placeholder="Ex: 5ml, 1 comprimido..."/>
       <Input label="Data da próxima dose (opcional)" type="date" value={form.proxDose||""} onChange={e=>setForm({...form,proxDose:e.target.value})}/>
       <Input label="Observações" value={form.obs||""} onChange={e=>setForm({...form,obs:e.target.value})} placeholder="Veterinário, lote do produto..."/>
-      <Btn onClick={salvar}>Salvar Registro</Btn>
+      <Btn onClick={salvar} disabled={saving}>{saving?"Salvando...":"Salvar Registro"}</Btn>
     </Modal>
 
     <Modal open={!!deleteModal} onClose={()=>setDeleteModal(null)} title="Excluir registro">

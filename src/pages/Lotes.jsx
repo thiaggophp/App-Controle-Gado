@@ -15,6 +15,7 @@ export default function Lotes({user,onAbrirLote}){
   const[deleteModal,setDeleteModal]=useState(null);
   const[edit,setEdit]=useState(null);
   const[filtro,setFiltro]=useState("ativo");
+  const[saving,setSaving]=useState(false);
   const[form,setForm]=useState({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:"",qtdEntrada:0,pesoMedioEntrada:0,valorCabeca:0,procedencia:"",obs:""});
   const[nomeFazenda,setNomeFazenda]=useState("");const[cidadeFazenda,setCidadeFazenda]=useState("");
 
@@ -25,18 +26,20 @@ export default function Lotes({user,onAbrirLote}){
   const abrirEditar=(l)=>{setEdit(l);setForm({...l});setModal(true)};
 
   const salvar=async()=>{
-    if(!form.nome.trim()){return}
+    if(!form.nome.trim()||saving)return;
+    setSaving(true);
     const l={...form,ownerEmail:user.email,status:form.status||"ativo",qtdEntrada:parseInt(form.qtdEntrada)||0,pesoMedioEntrada:parseFloat(form.pesoMedioEntrada)||0,valorCabeca:parseFloat(form.valorCabeca)||0};
     if(edit)l.id=edit.id;
-    await saveLote(l);setModal(false);await recarregar();
+    await saveLote(l);setModal(false);await recarregar();setSaving(false);
   };
 
-  const excluir=async(l)=>{await deleteLoteCascade(l.id);setDeleteModal(null);await recarregar()};
+  const excluir=async(l)=>{setSaving(true);await deleteLoteCascade(l.id);setDeleteModal(null);await recarregar();setSaving(false)};
 
   const salvarFazenda=async()=>{
-    if(!nomeFazenda.trim())return;
+    if(!nomeFazenda.trim()||saving)return;
+    setSaving(true);
     await saveFazenda({ownerEmail:user.email,nome:nomeFazenda.trim(),cidade:cidadeFazenda.trim()});
-    setNomeFazenda("");setCidadeFazenda("");setFazendaModal(false);await recarregar();
+    setNomeFazenda("");setCidadeFazenda("");setFazendaModal(false);await recarregar();setSaving(false);
   };
 
   const lotesFiltrados=lotes.filter(l=>filtro==="todos"||l.status===filtro);
@@ -114,21 +117,21 @@ export default function Lotes({user,onAbrirLote}){
       {edit&&<Select label="Status" value={form.status} onChange={e=>setForm({...form,status:e.target.value})} options={STATUS}/>}
       <Input label="Procedência (de onde veio o gado)" value={form.procedencia||""} onChange={e=>setForm({...form,procedencia:e.target.value})} placeholder="Ex: Fazenda Boa Vista, leilão Barretos..."/>
       <Input label="Observações (opcional)" value={form.obs||""} onChange={e=>setForm({...form,obs:e.target.value})} placeholder="Condições, detalhes adicionais..."/>
-      <Btn onClick={salvar}>{edit?"Salvar Alterações":"Criar Lote"}</Btn>
+      <Btn onClick={salvar} disabled={saving}>{saving?"Salvando...":(edit?"Salvar Alterações":"Criar Lote")}</Btn>
     </Modal>
 
     <Modal open={fazendaModal} onClose={()=>setFazendaModal(false)} title="Nova Fazenda">
       <Input label="Nome da fazenda" value={nomeFazenda} onChange={e=>setNomeFazenda(e.target.value)} placeholder="Ex: Fazenda São João"/>
       <Input label="Cidade / Estado" value={cidadeFazenda} onChange={e=>setCidadeFazenda(e.target.value)} placeholder="Ex: Uberaba - MG"/>
-      <Btn onClick={salvarFazenda}>Cadastrar Fazenda</Btn>
+      <Btn onClick={salvarFazenda} disabled={saving}>{saving?"Salvando...":"Cadastrar Fazenda"}</Btn>
     </Modal>
 
     <Modal open={!!deleteModal} onClose={()=>setDeleteModal(null)} title="Excluir lote">
       {deleteModal&&<>
-        <p style={{color:"#94a3b8",fontSize:14,marginBottom:20,textAlign:"center"}}>Excluir o lote <strong style={{color:"#f1f5f9"}}>{deleteModal.nome}</strong>? Todos os animais, pesagens e custos vinculados serão perdidos.</p>
+        <p style={{color:"#94a3b8",fontSize:14,marginBottom:20,textAlign:"center"}}>Excluir o lote <strong style={{color:"#f1f5f9"}}>{deleteModal.nome}</strong>? Todos os animais, pesagens, custos, vendas e registros de saúde vinculados serão perdidos.</p>
         <div style={{display:"flex",gap:8}}>
           <Btn onClick={()=>setDeleteModal(null)} color="rgba(255,255,255,0.06)" style={{flex:1,border:"1px solid rgba(255,255,255,0.08)",color:"#94a3b8"}}>Cancelar</Btn>
-          <Btn onClick={()=>excluir(deleteModal)} color="linear-gradient(135deg,#ef4444,#dc2626)" style={{flex:1}}>Excluir</Btn>
+          <Btn onClick={()=>excluir(deleteModal)} color="linear-gradient(135deg,#ef4444,#dc2626)" style={{flex:1}} disabled={saving}>{saving?"Excluindo...":"Excluir"}</Btn>
         </div>
       </>}
     </Modal>
