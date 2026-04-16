@@ -19,6 +19,8 @@ jobs:
             git pull
             npm install
             npm run build
+            BUILD_TS=$(date +%s)
+            sed -i "s/const CACHE=\"[^\"]*\"/const CACHE=\"gado-${BUILD_TS}\"/" dist/sw.js
             cp -r dist/* /var/www/gado-html/
             systemctl reload nginx
-            echo "Deploy GadoControle concluído!"
+            echo "Deploy GadoControle concluído! Cache SW: gado-${BUILD_TS}"
