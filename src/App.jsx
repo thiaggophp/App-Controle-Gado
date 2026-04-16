@@ -31,6 +31,9 @@ export default function App(){
   const[novaSenha,setNovaSenha]=useState("");const[confirmarSenha,setConfirmarSenha]=useState("");const[senhaMsg,setSenhaMsg]=useState(null);
   const[refreshKey,setRefreshKey]=useState(0);
   const[loteAberto,setLoteAberto]=useState(null);
+  const[novaVersao,setNovaVersao]=useState(false);
+
+  useEffect(()=>{if(!("serviceWorker"in navigator))return;const h=()=>setNovaVersao(true);navigator.serviceWorker.addEventListener("controllerchange",h);return()=>navigator.serviceWorker.removeEventListener("controllerchange",h)},[]);
 
   useEffect(()=>{(async()=>{
     initAdmin().catch(()=>{});
@@ -103,6 +106,7 @@ export default function App(){
   };
 
   return(<div style={{minHeight:"100vh",background:"#0a0f0a",paddingBottom:80}}>
+    {novaVersao&&<div onClick={()=>window.location.reload()} style={{position:"fixed",top:0,left:0,right:0,zIndex:9999,background:"#16a34a",color:"#fff",textAlign:"center",padding:"12px 16px",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}><span>Nova versão disponível</span><span style={{background:"rgba(255,255,255,0.2)",borderRadius:8,padding:"3px 10px",fontSize:12}}>Toque para atualizar</span></div>}
     <div style={{padding:"14px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"rgba(10,15,10,.92)",zIndex:100,backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
       <div>
         <div style={{fontSize:18,fontWeight:800,background:"linear-gradient(135deg,#86efac,#16a34a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:-.3}}>GadoControle</div>
