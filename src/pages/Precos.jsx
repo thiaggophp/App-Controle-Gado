@@ -213,14 +213,12 @@ export default function Precos(){
         {/* Dados dos Animais */}
         <Card style={{marginBottom:12}}>
           <div style={{color:"#86efac",fontSize:10,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",marginBottom:14}}>1. DADOS DOS ANIMAIS</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,alignItems:"start"}}>
-            <FLErr label="Nº de Animais *" erro={erros.animais}>
-              <NI value={animais} onChange={v=>{setAnimais(v);setErros(e=>({...e,animais:""}))}} suffix="cab" erro={erros.animais}/>
-            </FLErr>
-            <FLErr label="Peso de Entrada *" erro={erros.pesoEntrada}>
-              <NI value={pesoEntrada} onChange={v=>{setPesoEntrada(v);setErros(e=>({...e,pesoEntrada:""}))}} suffix="kg" erro={erros.pesoEntrada}/>
-            </FLErr>
-          </div>
+          <FLErr label="Nº de Animais *" erro={erros.animais}>
+            <NI value={animais} onChange={v=>{setAnimais(v);setErros(e=>({...e,animais:""}))}} suffix="cab" erro={erros.animais}/>
+          </FLErr>
+          <FLErr label="Peso de Entrada *" erro={erros.pesoEntrada}>
+            <NI value={pesoEntrada} onChange={v=>{setPesoEntrada(v);setErros(e=>({...e,pesoEntrada:""}))}} suffix="kg" erro={erros.pesoEntrada}/>
+          </FLErr>
           {n(pesoEntrada)>0&&<div style={{background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"8px 12px",marginBottom:10,display:"flex",gap:20}}>
             <span style={{color:"#64748b",fontSize:12}}>Entrada: <strong style={{color:"#94a3b8"}}>{fmt(n(pesoEntrada)/15,2)} @/cab</strong></span>
             {custoSugerido>0&&<span style={{color:"#64748b",fontSize:12}}>Valor pela cot.: <strong style={{color:"#4ade80"}}>R$ {fmt(custoSugerido,0)}/cab</strong></span>}
@@ -239,16 +237,14 @@ export default function Precos(){
             {periodoData?<div style={{color:"#4ade80",fontSize:11,marginTop:3}}>✓ {periodoData.dias} dias — {periodoData.label}</div>
               :mesVendaStr.length>3&&<div style={{color:"#f87171",fontSize:11,marginTop:3}}>Formato MM/AAAA, data futura</div>}
           </FLErr>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,alignItems:"start"}}>
-            <FL label="GMD Esperado">
-              <NI value={gmd} onChange={setGmd} suffix="kg/dia"/>
-              <div style={{color:"#475569",fontSize:10,marginTop:3}}>Refer.: 1.2–1.8 kg/dia</div>
-            </FL>
-            <FL label="Custo Diário/cab">
-              <NI value={custoDiario} onChange={setCustoDiario} prefix="R$" suffix="/dia"/>
-              <div style={{color:"#475569",fontSize:10,marginTop:3}}>Ração, sanidade, M.O.</div>
-            </FL>
-          </div>
+          <FL label="GMD Esperado">
+            <NI value={gmd} onChange={setGmd} suffix="kg/dia"/>
+            <div style={{color:"#475569",fontSize:10,marginTop:3}}>Confinamento: 1.2–1.8 kg/dia</div>
+          </FL>
+          <FL label="Custo Diário / Animal">
+            <NI value={custoDiario} onChange={setCustoDiario} prefix="R$" suffix="/dia"/>
+            <div style={{color:"#475569",fontSize:10,marginTop:3}}>Inclui ração, sanidade, M.O.</div>
+          </FL>
           {periodoData&&n(gmd)>0&&n(pesoEntrada)>0&&<div style={{background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"8px 12px",display:"flex",gap:20,flexWrap:"wrap"}}>
             <span style={{color:"#64748b",fontSize:12}}>Peso saída est.: <strong style={{color:"#f1f5f9"}}>{fmt(n(pesoEntrada)+n(gmd)*periodoData.dias,0)} kg</strong></span>
             <span style={{color:"#64748b",fontSize:12}}>@ saída: <strong style={{color:"#f1f5f9"}}>{fmt((n(pesoEntrada)+n(gmd)*periodoData.dias)/15,2)} @/cab</strong></span>
