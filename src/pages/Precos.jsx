@@ -237,10 +237,6 @@ export default function Precos(){
             <span style={{color:"#64748b",fontSize:12}}>Entrada: <strong style={{color:"#94a3b8"}}>{fmt(n(pesoEntrada)*n(rendimento)/100/15,2)} @/cab</strong></span>
             {custoSugerido>0&&<span style={{color:"#64748b",fontSize:12}}>Valor pela cot.: <strong style={{color:"#4ade80"}}>R$ {fmt(custoSugerido,0)}/cab</strong></span>}
           </div>}
-          <FL label="Rendimento Estimado (% carcaça)">
-            <NI value={rendimento} onChange={setRendimento} suffix="%"/>
-            <div style={{color:"#475569",fontSize:10,marginTop:3}}>Padrão: 50–55% para bovinos de corte</div>
-          </FL>
           <FLErr label="Custo de Compra por Animal (R$) *" erro={erros.custoCompra}>
             <NI value={custoCompraManual} onChange={v=>{setCustoCompraManual(v);setErros(e=>({...e,custoCompra:""}))}} prefix="R$" erro={erros.custoCompra}/>
             {!custoCompraManual&&custoSugerido>0&&<div style={{color:"#4ade80",fontSize:11,marginTop:3}}>↑ Vazio = usa valor pela cotação (R$ {fmt(custoSugerido,0)})</div>}
@@ -274,6 +270,10 @@ export default function Precos(){
         {/* Preço de Venda */}
         <Card style={{marginBottom:14}}>
           <div style={{color:"#86efac",fontSize:10,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",marginBottom:14}}>3. PREÇO DE VENDA</div>
+          <FL label="Rendimento Estimado (% carcaça)">
+            <NI value={rendimento} onChange={setRendimento} suffix="%"/>
+            <div style={{color:"#475569",fontSize:10,marginTop:3}}>Padrão: 50–55% para bovinos de corte</div>
+          </FL>
           <FLErr label="Preço por Arroba na Venda (R$/@) *" erro={erros.precoVenda}>
             <NI value={precoVenda} onChange={v=>{setPrecoVenda(v);setErros(e=>({...e,precoVenda:""}))}} prefix="R$" suffix="/@" erro={erros.precoVenda}/>
             {bgi&&<div style={{color:"#475569",fontSize:11,marginTop:3}}>Cotação BGI atual: R$ {fmt(bgi.preco)} — <button onClick={()=>setPrecoVenda(String(bgi.preco))} style={{background:"none",border:"none",color:"#4ade80",fontSize:11,cursor:"pointer",padding:0,fontWeight:600}}>usar</button></div>}
