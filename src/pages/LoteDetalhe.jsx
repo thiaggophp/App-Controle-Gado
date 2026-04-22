@@ -45,6 +45,16 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     setAnimais(a);setPesagens(p);setCustos(c);setVendas(v);
   };
   useEffect(()=>{recarregar()},[lote.id]);
+  useEffect(()=>{
+    try{const s=localStorage.getItem("gado_animal_form");if(s)setAnimalForm(f=>({...f,...JSON.parse(s)}))}catch{}
+    try{const s=localStorage.getItem("gado_pesagem_form");if(s)setPesagemForm(f=>({...f,...JSON.parse(s)}))}catch{}
+    try{const s=localStorage.getItem("gado_custo_form");if(s)setCustoForm(f=>({...f,...JSON.parse(s)}))}catch{}
+    try{const s=localStorage.getItem("gado_venda_form");if(s)setVendaForm(f=>({...f,...JSON.parse(s)}))}catch{}
+  },[]);
+  useEffect(()=>{if(!editAnimal)try{localStorage.setItem("gado_animal_form",JSON.stringify(animalForm))}catch{}},[animalForm,editAnimal]);
+  useEffect(()=>{try{localStorage.setItem("gado_pesagem_form",JSON.stringify(pesagemForm))}catch{}},[pesagemForm]);
+  useEffect(()=>{if(!editCusto)try{localStorage.setItem("gado_custo_form",JSON.stringify(custoForm))}catch{}},[custoForm,editCusto]);
+  useEffect(()=>{try{localStorage.setItem("gado_venda_form",JSON.stringify(vendaForm))}catch{}},[vendaForm]);
 
   // ── ANIMAIS ──
   const salvarAnimal=async()=>{
@@ -54,7 +64,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     try{
       const a={...animalForm,ownerEmail:user.email,loteId:lote.id,pesoEntrada:parseFloat(animalForm.pesoEntrada)||0,status:"ativo"};
       if(editAnimal)a.id=editAnimal.id;
-      await saveAnimal(a);setAnimalModal(false);setEditAnimal(null);await recarregar();
+      await saveAnimal(a);localStorage.removeItem("gado_animal_form");setAnimalModal(false);setEditAnimal(null);await recarregar();
     }catch{setSaveErr("Erro ao salvar animal. Verifique a conexão.")}
     setSaving(false);
   };
@@ -70,7 +80,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     try{
       const p={...pesagemForm,ownerEmail:user.email,loteId:lote.id,peso:parseFloat(pesagemForm.peso)||0};
       if(p.tipo==="lote")p.animalId="";
-      await savePesagem(p);setPesagemModal(false);await recarregar();
+      await savePesagem(p);localStorage.removeItem("gado_pesagem_form");setPesagemModal(false);await recarregar();
     }catch{setSaveErr("Erro ao salvar pesagem.")}
     setSaving(false);
   };
@@ -82,7 +92,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     try{
       const c={...custoForm,ownerEmail:user.email,loteId:lote.id,valor:parseFloat(custoForm.valor)||0};
       if(editCusto)c.id=editCusto.id;
-      await saveCusto(c);setCustoModal(false);setEditCusto(null);await recarregar();
+      await saveCusto(c);localStorage.removeItem("gado_custo_form");setCustoModal(false);setEditCusto(null);await recarregar();
     }catch{setSaveErr("Erro ao salvar custo.")}
     setSaving(false);
   };
@@ -104,7 +114,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
       const vendidos=vendas.reduce((s,v)=>s+v.qtdAnimais,0)+(parseInt(vendaForm.qtdAnimais)||0);
       if(vendidos>=animaisAtivos)await saveLote({...lote,status:"vendido"});
       else if(vendidos>0)await saveLote({...lote,status:"parcial"});
-      setVendaModal(false);await recarregar();
+      localStorage.removeItem("gado_venda_form");setVendaModal(false);await recarregar();
     }catch{setSaveErr("Erro ao salvar venda.")}
     setSaving(false);
   };

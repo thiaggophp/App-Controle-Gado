@@ -22,6 +22,8 @@ export default function Lotes({user,onAbrirLote}){
 
   const recarregar=async()=>{setLotes(await getLotes(user.email));setFazendas(await getFazendas(user.email))};
   useEffect(()=>{recarregar()},[user.email]);
+  useEffect(()=>{const s=localStorage.getItem("gado_lote_form");if(s)try{setForm(f=>({...f,...JSON.parse(s)}))}catch{}},[]);
+  useEffect(()=>{if(!edit)try{localStorage.setItem("gado_lote_form",JSON.stringify(form))}catch{}},[form,edit]);
 
   const abrirNovo=()=>{setEdit(null);setErros({});setForm({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:fazendas[0]?.id||"",qtdEntrada:"",pesoMedioEntrada:"",valorCabeca:"",procedencia:"",obs:""});setModal(true)};
   const abrirEditar=(l)=>{setEdit(l);setErros({});setForm({...l});setModal(true)};
@@ -37,7 +39,7 @@ export default function Lotes({user,onAbrirLote}){
     setSaving(true);
     const l={...form,ownerEmail:user.email,status:form.status||"ativo",qtdEntrada:parseInt(form.qtdEntrada)||0,pesoMedioEntrada:parseFloat(form.pesoMedioEntrada)||0,valorCabeca:parseFloat(form.valorCabeca)||0};
     if(edit)l.id=edit.id;
-    await saveLote(l);setModal(false);await recarregar();setSaving(false);
+    await saveLote(l);localStorage.removeItem("gado_lote_form");setModal(false);await recarregar();setSaving(false);
   };
 
   const excluir=async(l)=>{setSaving(true);await deleteLoteCascade(l.id);setDeleteModal(null);await recarregar();setSaving(false)};

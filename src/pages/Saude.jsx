@@ -25,6 +25,8 @@ export default function Saude({user}){
     const[r,a]=await Promise.all([getSaude(loteId),getAnimais(loteId)]);
     setRegistros(r);setAnimais(a);
   })()},[loteId]);
+  useEffect(()=>{const s=localStorage.getItem("gado_saude_form");if(s)try{setForm(f=>({...f,...JSON.parse(s)}))}catch{}},[]);
+  useEffect(()=>{try{localStorage.setItem("gado_saude_form",JSON.stringify(form))}catch{}},[form]);
 
   const recarregar=async()=>{
     const[r,a]=await Promise.all([getSaude(loteId),getAnimais(loteId)]);
@@ -35,7 +37,7 @@ export default function Saude({user}){
     if(!form.produto.trim()||saving)return;
     setSaving(true);
     await saveSaude({...form,ownerEmail:user.email,loteId});
-    setModal(false);await recarregar();setSaving(false);
+    localStorage.removeItem("gado_saude_form");setModal(false);await recarregar();setSaving(false);
   };
 
   const hoje=new Date().toISOString().slice(0,10);
