@@ -1,4 +1,4 @@
-const CACHE="gado-v13";
+const CACHE="gado-v14";
 self.addEventListener("install",e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(["/","/index.html"])));
   self.skipWaiting();
