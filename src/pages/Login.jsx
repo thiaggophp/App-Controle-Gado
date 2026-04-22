@@ -1,12 +1,18 @@
-import{useState}from"react";
+import{useState,useEffect}from"react";
 import{getAccount,addSignupRequest,saveAccount}from"../db";
 import{sendPasswordEmail,generatePassword,sendSignupNotification}from"../emailService";
 import{Btn,Input}from"../components/FormElements";
+
+const SAVE_KEY="gado_login";
 
 export default function Login({onLogin}){
   const[mode,setMode]=useState("login");
   const[email,setEmail]=useState("");const[password,setPassword]=useState("");
   const[name,setName]=useState("");const[msg,setMsg]=useState(null);const[loading,setLoading]=useState(false);
+  useEffect(()=>{
+    const s=localStorage.getItem(SAVE_KEY);
+    if(s){try{const d=JSON.parse(s);setEmail(d.e||"");setPassword(d.p||"")}catch{}}
+  },[]);
 
   const handleLogin=async()=>{
     if(!email||!password){setMsg({t:"error",m:"Preencha todos os campos"});return}
@@ -15,6 +21,7 @@ export default function Login({onLogin}){
     if(!acc){setMsg({t:"error",m:"Conta não encontrada"});setLoading(false);return}
     if(acc.status==="blocked"){setMsg({t:"error",m:"Conta bloqueada. Contate o administrador."});setLoading(false);return}
     if(acc.password!==password){setMsg({t:"error",m:"Senha incorreta"});setLoading(false);return}
+    localStorage.setItem(SAVE_KEY,JSON.stringify({e:email.trim().toLowerCase(),p:password}));
     setLoading(false);onLogin(acc);
   };
 
