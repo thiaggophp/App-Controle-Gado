@@ -77,15 +77,14 @@ export default function Precos(){
   const[pregaoAberto]=useState(isPregaoAberto);
 
   // Campos da simulação — restaurados do localStorage ao voltar de outro app
-  const ss=(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))||{}}catch{return{}}})();
-  const[animais,setAnimais]=useState(ss.animais||"10");
-  const[pesoEntrada,setPesoEntrada]=useState(ss.pesoEntrada||"350");
-  const[custoCompraManual,setCustoCompraManual]=useState(ss.custoCompraManual||"");
-  const[gmd,setGmd]=useState(ss.gmd||"1.2");
-  const[custoDiario,setCustoDiario]=useState(ss.custoDiario||"15");
-  const[rendimento,setRendimento]=useState(ss.rendimento||"50");
-  const[mesVendaStr,setMesVendaStr]=useState(ss.mesVendaStr||defaultData());
-  const[precoVenda,setPrecoVenda]=useState(ss.precoVenda||"");
+  const[animais,setAnimais]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.animais||"10"}catch{return"10"}});
+  const[pesoEntrada,setPesoEntrada]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.pesoEntrada||"350"}catch{return"350"}});
+  const[custoCompraManual,setCustoCompraManual]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.custoCompraManual||""}catch{return""}});
+  const[gmd,setGmd]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.gmd||"1.2"}catch{return"1.2"}});
+  const[custoDiario,setCustoDiario]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.custoDiario||"15"}catch{return"15"}});
+  const[rendimento,setRendimento]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.rendimento||"50"}catch{return"50"}});
+  const[mesVendaStr,setMesVendaStr]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.mesVendaStr||defaultData()}catch{return defaultData()}});
+  const[precoVenda,setPrecoVenda]=useState(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))?.precoVenda||""}catch{return""}});
   const[erros,setErros]=useState({});
   const[resultado,setResultado]=useState(null);
 

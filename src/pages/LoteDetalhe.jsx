@@ -129,7 +129,8 @@ export default function LoteDetalhe({lote,user,onVoltar}){
   // Custo por arroba
   const ultPesagemLote=pesagens.filter(p=>!p.animalId).sort((a,b)=>b.data.localeCompare(a.data))[0];
   const pesoMedioAtual=ultPesagemLote?ultPesagemLote.peso:(lote.pesoMedioEntrada||0);
-  const arrobasAtuais=pesoMedioAtual>0?((pesoMedioAtual*animaisAtivos.length)||pesoMedioAtual*(lote.qtdEntrada||1))/15:0;
+  const rendCarcaca=(parseFloat(simRendimento)||50)/100;
+  const arrobasAtuais=pesoMedioAtual>0?((pesoMedioAtual*animaisAtivos.length)||pesoMedioAtual*(lote.qtdEntrada||1))*rendCarcaca/15:0;
   const totalInvestido=custoCompra+totalCustos;
   const custoPorArroba=arrobasAtuais>0?totalInvestido/arrobasAtuais:0;
 
@@ -137,7 +138,8 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     const pesAgora=pesagens.filter(p=>p.animalId===a.id).sort((x,y)=>y.data.localeCompare(x.data));
     if(!pesAgora.length)return null;
     const ultPeso=pesAgora[0].peso;
-    const dias=Math.floor((new Date()-new Date(lote.dataEntrada+"T12:00"))/(1000*60*60*24))||1;
+    const dataRef=a.dataEntrada||lote.dataEntrada;
+    const dias=Math.floor((new Date()-new Date(dataRef+"T12:00"))/(1000*60*60*24))||1;
     return((ultPeso-a.pesoEntrada)/dias).toFixed(3);
   };
 
