@@ -29,6 +29,14 @@ function fmtPct(v){return`${v>=0?"+":""}${fmt(v)}%`}
 function n(v){return parseFloat(String(v).replace(",","."))||0}
 
 function parseMesAno(str){
+  const d3=str.match(/^(\d{1,2})\/(\d{2})\/(\d{4})$/);
+  if(d3){
+    const dia=parseInt(d3[1]),mes=parseInt(d3[2]),ano=parseInt(d3[3]);
+    if(dia<1||dia>31||mes<1||mes>12||ano<2020)return null;
+    const alvo=new Date(ano,mes-1,dia);if(alvo.getDate()!==dia)return null;
+    const hoje=new Date();hoje.setHours(0,0,0,0);if(alvo<=hoje)return null;
+    return{dias:Math.round((alvo-hoje)/86400000),label:alvo.toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"})};
+  }
   const m=str.match(/^(\d{2})\/(\d{4})$/);if(!m)return null;
   const mes=parseInt(m[1]),ano=parseInt(m[2]);if(mes<1||mes>12||ano<2020)return null;
   const alvo=new Date(ano,mes-1,1);const hoje=new Date();hoje.setHours(0,0,0,0);
@@ -38,10 +46,11 @@ function parseMesAno(str){
 function defaultMesAno(){const d=new Date();d.setMonth(d.getMonth()+6);return`${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;}
 
 // Cálculo central da simulação — reutilizado em cenários
-function calcSim({qtd,pesoEntrada,custoCompra,gmdV,custoDiario,periodo,precoArroba}){
+function calcSim({qtd,pesoEntrada,custoCompra,gmdV,custoDiario,periodo,precoArroba,rendimento=50}){
+  const rend=rendimento/100;
   const pesoSaida=pesoEntrada+(gmdV*periodo);
-  const arrobasEntrada=pesoEntrada/15;
-  const arrobasSaida=pesoSaida/15;
+  const arrobasEntrada=(pesoEntrada*rend)/15;
+  const arrobasSaida=(pesoSaida*rend)/15;
   const arrobasProduzidas=arrobasSaida-arrobasEntrada;
   const custoCompraTotal=custoCompra*qtd;
   const custoPeriodoTotal=custoDiario*periodo*qtd;
@@ -80,6 +89,7 @@ export default function Precos(){
   const[custoCompraManual,setCustoCompraManual]=useState("");
   const[gmd,setGmd]=useState("1.2");
   const[custoDiario,setCustoDiario]=useState("15");
+  const[rendimento,setRendimento]=useState("50");
   const[mesVendaStr,setMesVendaStr]=useState(defaultMesAno);
   const[precoVenda,setPrecoVenda]=useState("");
   const[erros,setErros]=useState({});
@@ -112,7 +122,7 @@ export default function Precos(){
   const periodoData=parseMesAno(mesVendaStr);
 
   // Sugestão de custo de compra pela cotação
-  const custoSugerido=bgi&&n(pesoEntrada)>0?(n(pesoEntrada)/15)*bgi.preco:0;
+  const custoSugerido=bgi&&n(pesoEntrada)>0?(n(pesoEntrada)*n(rendimento)/100/15)*bgi.preco:0;
   const custoCompraFinal=n(custoCompraManual)||custoSugerido;
 
   const calcular=()=>{
@@ -120,7 +130,7 @@ export default function Precos(){
     if(n(animais)<=0)errs.animais="obrigatório";
     if(n(pesoEntrada)<=0)errs.pesoEntrada="obrigatório";
     if(custoCompraFinal<=0)errs.custoCompra="informe ou aguarde cotação";
-    if(!periodoData)errs.mesVenda="use MM/AAAA com data futura";
+    if(!periodoData)errs.mesVenda="use DD/MM/AAAA ou MM/AAAA com data futura";
     if(n(precoVenda)<=0)errs.precoVenda="obrigatório";
     setErros(errs);
     if(Object.keys(errs).length>0){setResultado(null);return;}
@@ -129,6 +139,7 @@ export default function Precos(){
       custoCompra:custoCompraFinal,gmdV:n(gmd),
       custoDiario:n(custoDiario),periodo:periodoData.dias,
       periodoLabel:periodoData.label,precoArroba:n(precoVenda),
+      rendimento:n(rendimento),
     });
   };
 
@@ -176,7 +187,7 @@ export default function Precos(){
         </div>
         {bgi?<>
           <div style={{color:"#f1f5f9",fontSize:32,fontWeight:800,letterSpacing:-1}}>R$ {fmt(bgi.preco)}<span style={{fontSize:14,fontWeight:500,color:"#64748b"}}> / @</span></div>
-          <div style={{color:"#64748b",fontSize:12,marginTop:4}}>≈ R$ {fmt(bgi.preco/15,3)} / kg vivo</div>
+          <div style={{color:"#64748b",fontSize:12,marginTop:4}}>≈ R$ {fmt(bgi.preco/15,3)} / kg carcaça</div>
         </>:<div style={{color:"#475569",fontSize:13}}>{loading?"Buscando...":"Dados indisponíveis no momento"}</div>}
       </Card>
 
@@ -199,8 +210,8 @@ export default function Precos(){
         <div style={{color:"#86efac",fontSize:11,fontWeight:600,letterSpacing:.5,textTransform:"uppercase",marginBottom:10}}>📊 Valor por Animal (peso vivo)</div>
         {[250,350,450,550].map(kg=>(
           <div key={kg} style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{color:"#94a3b8",fontSize:13}}>{kg} kg — {(kg/15).toFixed(1)} @</span>
-            <span style={{color:"#4ade80",fontWeight:700,fontSize:13}}>R$ {fmt((kg/15)*bgi.preco,0)}</span>
+            <span style={{color:"#94a3b8",fontSize:13}}>{kg} kg — {(kg*n(rendimento)/100/15).toFixed(1)} @</span>
+            <span style={{color:"#4ade80",fontWeight:700,fontSize:13}}>R$ {fmt((kg*n(rendimento)/100/15)*bgi.preco,0)}</span>
           </div>
         ))}
       </Card>}
@@ -224,9 +235,13 @@ export default function Precos(){
             <NI value={pesoEntrada} onChange={v=>{setPesoEntrada(v);setErros(e=>({...e,pesoEntrada:""}))}} suffix="kg" erro={erros.pesoEntrada}/>
           </FLErr>
           {n(pesoEntrada)>0&&<div style={{background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"8px 12px",marginBottom:10,display:"flex",gap:20}}>
-            <span style={{color:"#64748b",fontSize:12}}>Entrada: <strong style={{color:"#94a3b8"}}>{fmt(n(pesoEntrada)/15,2)} @/cab</strong></span>
+            <span style={{color:"#64748b",fontSize:12}}>Entrada: <strong style={{color:"#94a3b8"}}>{fmt(n(pesoEntrada)*n(rendimento)/100/15,2)} @/cab</strong></span>
             {custoSugerido>0&&<span style={{color:"#64748b",fontSize:12}}>Valor pela cot.: <strong style={{color:"#4ade80"}}>R$ {fmt(custoSugerido,0)}/cab</strong></span>}
           </div>}
+          <FL label="Rendimento Estimado (% carcaça)">
+            <NI value={rendimento} onChange={setRendimento} suffix="%"/>
+            <div style={{color:"#475569",fontSize:10,marginTop:3}}>Padrão: 50–55% para bovinos de corte</div>
+          </FL>
           <FLErr label="Custo de Compra por Animal (R$) *" erro={erros.custoCompra}>
             <NI value={custoCompraManual} onChange={v=>{setCustoCompraManual(v);setErros(e=>({...e,custoCompra:""}))}} prefix="R$" erro={erros.custoCompra}/>
             {!custoCompraManual&&custoSugerido>0&&<div style={{color:"#4ade80",fontSize:11,marginTop:3}}>↑ Vazio = usa valor pela cotação (R$ {fmt(custoSugerido,0)})</div>}
@@ -236,10 +251,10 @@ export default function Precos(){
         {/* Período e Custos */}
         <Card style={{marginBottom:12}}>
           <div style={{color:"#86efac",fontSize:10,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",marginBottom:14}}>2. PERÍODO E CUSTOS OPERACIONAIS</div>
-          <FLErr label="Mês e Ano Previsto de Venda *" erro={erros.mesVenda}>
-            <TI value={mesVendaStr} onChange={v=>{setMesVendaStr(v);setErros(e=>({...e,mesVenda:""}))}} placeholder="Ex: 10/2026" erro={erros.mesVenda}/>
+          <FLErr label="Data Prevista de Venda *" erro={erros.mesVenda}>
+            <TI value={mesVendaStr} onChange={v=>{setMesVendaStr(v);setErros(e=>({...e,mesVenda:""}))}} placeholder="Ex: 25/10/2026 ou 10/2026" erro={erros.mesVenda}/>
             {periodoData?<div style={{color:"#4ade80",fontSize:11,marginTop:3}}>✓ {periodoData.dias} dias — {periodoData.label}</div>
-              :mesVendaStr.length>3&&<div style={{color:"#f87171",fontSize:11,marginTop:3}}>Formato MM/AAAA, data futura</div>}
+              :mesVendaStr.length>3&&<div style={{color:"#f87171",fontSize:11,marginTop:3}}>Formato DD/MM/AAAA ou MM/AAAA, data futura</div>}
           </FLErr>
           <FL label="GMD Esperado">
             <NI value={gmd} onChange={setGmd} suffix="kg/dia"/>
@@ -251,8 +266,8 @@ export default function Precos(){
           </FL>
           {periodoData&&n(gmd)>0&&n(pesoEntrada)>0&&<div style={{background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"8px 12px",display:"flex",gap:20,flexWrap:"wrap"}}>
             <span style={{color:"#64748b",fontSize:12}}>Peso saída est.: <strong style={{color:"#f1f5f9"}}>{fmt(n(pesoEntrada)+n(gmd)*periodoData.dias,0)} kg</strong></span>
-            <span style={{color:"#64748b",fontSize:12}}>@ saída: <strong style={{color:"#f1f5f9"}}>{fmt((n(pesoEntrada)+n(gmd)*periodoData.dias)/15,2)} @/cab</strong></span>
-            <span style={{color:"#64748b",fontSize:12}}>@ produzidas: <strong style={{color:"#4ade80"}}>{fmt(n(gmd)*periodoData.dias/15,2)} @/cab</strong></span>
+            <span style={{color:"#64748b",fontSize:12}}>@ saída: <strong style={{color:"#f1f5f9"}}>{fmt((n(pesoEntrada)+n(gmd)*periodoData.dias)*n(rendimento)/100/15,2)} @/cab</strong></span>
+            <span style={{color:"#64748b",fontSize:12}}>@ produzidas: <strong style={{color:"#4ade80"}}>{fmt(n(gmd)*periodoData.dias*n(rendimento)/100/15,2)} @/cab</strong></span>
           </div>}
         </Card>
 
