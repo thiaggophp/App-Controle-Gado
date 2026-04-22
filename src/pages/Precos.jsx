@@ -76,17 +76,22 @@ export default function Precos(){
   const[atualizado,setAtualizado]=useState(null);
   const[pregaoAberto]=useState(isPregaoAberto);
 
-  // Campos da simulação
-  const[animais,setAnimais]=useState("10");
-  const[pesoEntrada,setPesoEntrada]=useState("350");
-  const[custoCompraManual,setCustoCompraManual]=useState("");
-  const[gmd,setGmd]=useState("1.2");
-  const[custoDiario,setCustoDiario]=useState("15");
-  const[rendimento,setRendimento]=useState("50");
-  const[mesVendaStr,setMesVendaStr]=useState(defaultData);
-  const[precoVenda,setPrecoVenda]=useState("");
+  // Campos da simulação — restaurados do localStorage ao voltar de outro app
+  const ss=(()=>{try{return JSON.parse(localStorage.getItem("gado_sim"))||{}}catch{return{}}})();
+  const[animais,setAnimais]=useState(ss.animais||"10");
+  const[pesoEntrada,setPesoEntrada]=useState(ss.pesoEntrada||"350");
+  const[custoCompraManual,setCustoCompraManual]=useState(ss.custoCompraManual||"");
+  const[gmd,setGmd]=useState(ss.gmd||"1.2");
+  const[custoDiario,setCustoDiario]=useState(ss.custoDiario||"15");
+  const[rendimento,setRendimento]=useState(ss.rendimento||"50");
+  const[mesVendaStr,setMesVendaStr]=useState(ss.mesVendaStr||defaultData());
+  const[precoVenda,setPrecoVenda]=useState(ss.precoVenda||"");
   const[erros,setErros]=useState({});
   const[resultado,setResultado]=useState(null);
+
+  useEffect(()=>{
+    try{localStorage.setItem("gado_sim",JSON.stringify({animais,pesoEntrada,custoCompraManual,gmd,custoDiario,rendimento,mesVendaStr,precoVenda}))}catch{}
+  },[animais,pesoEntrada,custoCompraManual,gmd,custoDiario,rendimento,mesVendaStr,precoVenda]);
 
   const buscar=useCallback(async(forcar=false)=>{
     setLoading(true);setErroApi(null);

@@ -48,7 +48,8 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
   // ── ANIMAIS ──
   const salvarAnimal=async()=>{
-    if(!animalForm.brinco.trim())return;
+    if(!animalForm.brinco.trim()){setSaveErr("Informe o número do brinco");return;}
+    if(!(parseFloat(animalForm.pesoEntrada)>0)){setSaveErr("Informe o peso de entrada");return;}
     setSaving(true);setSaveErr("");
     try{
       const a={...animalForm,ownerEmail:user.email,loteId:lote.id,pesoEntrada:parseFloat(animalForm.pesoEntrada)||0,status:"ativo"};
@@ -63,8 +64,8 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
   // ── PESAGENS ──
   const salvarPesagem=async()=>{
-    if(!pesagemForm.peso)return;
-    if(pesagemForm.tipo==="individual"&&!pesagemForm.animalId)return;
+    if(!pesagemForm.peso){setSaveErr("Informe o peso");return;}
+    if(pesagemForm.tipo==="individual"&&!pesagemForm.animalId){setSaveErr("Selecione o animal");return;}
     setSaving(true);setSaveErr("");
     try{
       const p={...pesagemForm,ownerEmail:user.email,loteId:lote.id,peso:parseFloat(pesagemForm.peso)||0};
@@ -76,7 +77,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
   // ── CUSTOS ──
   const salvarCusto=async()=>{
-    if(!custoForm.valor)return;
+    if(!custoForm.valor){setSaveErr("Informe o valor do custo");return;}
     setSaving(true);setSaveErr("");
     try{
       const c={...custoForm,ownerEmail:user.email,loteId:lote.id,valor:parseFloat(custoForm.valor)||0};
@@ -89,7 +90,9 @@ export default function LoteDetalhe({lote,user,onVoltar}){
 
   // ── VENDAS ──
   const salvarVenda=async()=>{
-    if(!vendaForm.arrobas||!vendaForm.valorArroba)return;
+    if(!(parseInt(vendaForm.qtdAnimais)>0)){setSaveErr("Informe a quantidade de animais vendidos");return;}
+    if(!vendaForm.arrobas){setSaveErr("Informe o total de arrobas");return;}
+    if(!vendaForm.valorArroba){setSaveErr("Informe o valor por arroba");return;}
     setSaving(true);setSaveErr("");
     try{
       const arrobas=parseFloat(vendaForm.arrobas)||0;

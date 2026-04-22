@@ -16,17 +16,24 @@ export default function Lotes({user,onAbrirLote}){
   const[edit,setEdit]=useState(null);
   const[filtro,setFiltro]=useState("ativo");
   const[saving,setSaving]=useState(false);
+  const[erros,setErros]=useState({});
   const[form,setForm]=useState({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:"",qtdEntrada:0,pesoMedioEntrada:0,valorCabeca:0,procedencia:"",obs:""});
   const[nomeFazenda,setNomeFazenda]=useState("");const[cidadeFazenda,setCidadeFazenda]=useState("");
 
   const recarregar=async()=>{setLotes(await getLotes(user.email));setFazendas(await getFazendas(user.email))};
   useEffect(()=>{recarregar()},[user.email]);
 
-  const abrirNovo=()=>{setEdit(null);setForm({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:fazendas[0]?.id||"",qtdEntrada:"",pesoMedioEntrada:"",valorCabeca:"",procedencia:"",obs:""});setModal(true)};
-  const abrirEditar=(l)=>{setEdit(l);setForm({...l});setModal(true)};
+  const abrirNovo=()=>{setEdit(null);setErros({});setForm({nome:"",dataEntrada:new Date().toISOString().slice(0,10),racaPredominante:"Nelore",fazendaId:fazendas[0]?.id||"",qtdEntrada:"",pesoMedioEntrada:"",valorCabeca:"",procedencia:"",obs:""});setModal(true)};
+  const abrirEditar=(l)=>{setEdit(l);setErros({});setForm({...l});setModal(true)};
 
   const salvar=async()=>{
-    if(!form.nome.trim()||saving)return;
+    if(saving)return;
+    const e={};
+    if(!form.nome.trim())e.nome=true;
+    if(!(parseInt(form.qtdEntrada)>0))e.qtdEntrada=true;
+    if(!(parseFloat(form.pesoMedioEntrada)>0))e.pesoMedioEntrada=true;
+    if(!(parseFloat(form.valorCabeca)>0))e.valorCabeca=true;
+    setErros(e);if(Object.keys(e).length)return;
     setSaving(true);
     const l={...form,ownerEmail:user.email,status:form.status||"ativo",qtdEntrada:parseInt(form.qtdEntrada)||0,pesoMedioEntrada:parseFloat(form.pesoMedioEntrada)||0,valorCabeca:parseFloat(form.valorCabeca)||0};
     if(edit)l.id=edit.id;
@@ -98,12 +105,13 @@ export default function Lotes({user,onAbrirLote}){
     </div>}
 
     <Modal open={modal} onClose={()=>setModal(false)} title={edit?"Editar Lote":"Novo Lote"}>
-      <Input label="Nome do lote" value={form.nome} onChange={e=>setForm({...form,nome:e.target.value})} placeholder="Ex: Lote Março 2025"/>
+      <Input label={`Nome do lote *${erros.nome?" — obrigatório":""}`} value={form.nome} onChange={e=>{setForm({...form,nome:e.target.value});setErros(v=>({...v,nome:false}))}} placeholder="Ex: Lote Março 2025" style={erros.nome?{borderColor:"rgba(239,68,68,.6)"}:{}}/>
       <Input label="Data de entrada" type="date" value={form.dataEntrada} onChange={e=>setForm({...form,dataEntrada:e.target.value})}/>
       <Select label="Raça predominante" value={form.racaPredominante} onChange={e=>setForm({...form,racaPredominante:e.target.value})} options={RACAS.map(r=>({value:r,label:r}))}/>
-      <Input label="Quantidade de cabeças na entrada" type="number" value={form.qtdEntrada} onChange={e=>setForm({...form,qtdEntrada:e.target.value})} placeholder="0" inputMode="numeric"/>
-      <InputMoney label="Peso médio de entrada (kg)" value={form.pesoMedioEntrada} onChange={e=>setForm({...form,pesoMedioEntrada:e.target.value})} placeholder="0,00"/>
-      <InputMoney label="Valor por cabeça (R$)" value={form.valorCabeca} onChange={e=>setForm({...form,valorCabeca:e.target.value})} placeholder="0,00"/>
+      <Input label={`Qtd. de cabeças *${erros.qtdEntrada?" — obrigatório":""}`} type="number" value={form.qtdEntrada} onChange={e=>{setForm({...form,qtdEntrada:e.target.value});setErros(v=>({...v,qtdEntrada:false}))}} placeholder="0" inputMode="numeric" style={erros.qtdEntrada?{borderColor:"rgba(239,68,68,.6)"}:{}}/>
+      <InputMoney label={`Peso médio de entrada (kg) *${erros.pesoMedioEntrada?" — obrigatório":""}`} value={form.pesoMedioEntrada} onChange={e=>{setForm({...form,pesoMedioEntrada:e.target.value});setErros(v=>({...v,pesoMedioEntrada:false}))}} placeholder="0,00" style={erros.pesoMedioEntrada?{borderColor:"rgba(239,68,68,.6)"}:{}}/>
+      <InputMoney label={`Valor por cabeça (R$) *${erros.valorCabeca?" — obrigatório":""}`} value={form.valorCabeca} onChange={e=>{setForm({...form,valorCabeca:e.target.value});setErros(v=>({...v,valorCabeca:false}))}} placeholder="0,00" style={erros.valorCabeca?{borderColor:"rgba(239,68,68,.6)"}:{}}/>
+
       <div style={{marginBottom:16}}>
         <label style={{display:"block",color:"#64748b",fontSize:11,marginBottom:6,fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>Fazenda</label>
         <div style={{display:"flex",gap:8}}>
