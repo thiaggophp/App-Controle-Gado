@@ -28,22 +28,15 @@ function fmt(v,dec=2){return(v??0).toLocaleString("pt-BR",{minimumFractionDigits
 function fmtPct(v){return`${v>=0?"+":""}${fmt(v)}%`}
 function n(v){return parseFloat(String(v).replace(",","."))||0}
 
-function parseMesAno(str){
-  const d3=str.match(/^(\d{1,2})\/(\d{2})\/(\d{4})$/);
-  if(d3){
-    const dia=parseInt(d3[1]),mes=parseInt(d3[2]),ano=parseInt(d3[3]);
-    if(dia<1||dia>31||mes<1||mes>12||ano<2020)return null;
-    const alvo=new Date(ano,mes-1,dia);if(alvo.getDate()!==dia)return null;
-    const hoje=new Date();hoje.setHours(0,0,0,0);if(alvo<=hoje)return null;
-    return{dias:Math.round((alvo-hoje)/86400000),label:alvo.toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"})};
-  }
-  const m=str.match(/^(\d{2})\/(\d{4})$/);if(!m)return null;
-  const mes=parseInt(m[1]),ano=parseInt(m[2]);if(mes<1||mes>12||ano<2020)return null;
-  const alvo=new Date(ano,mes-1,1);const hoje=new Date();hoje.setHours(0,0,0,0);
+function parseDataVenda(str){
+  if(!str)return null;
+  const alvo=new Date(str+"T12:00:00");
+  if(isNaN(alvo))return null;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
   if(alvo<=hoje)return null;
-  return{dias:Math.round((alvo-hoje)/86400000),label:alvo.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})};
+  return{dias:Math.round((alvo-hoje)/86400000),label:alvo.toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"})};
 }
-function defaultMesAno(){const d=new Date();d.setMonth(d.getMonth()+6);return`${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;}
+function defaultData(){const d=new Date();d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);}
 
 // Cálculo central da simulação — reutilizado em cenários
 function calcSim({qtd,pesoEntrada,custoCompra,gmdV,custoDiario,periodo,precoArroba,rendimento=50}){
@@ -90,7 +83,7 @@ export default function Precos(){
   const[gmd,setGmd]=useState("1.2");
   const[custoDiario,setCustoDiario]=useState("15");
   const[rendimento,setRendimento]=useState("50");
-  const[mesVendaStr,setMesVendaStr]=useState(defaultMesAno);
+  const[mesVendaStr,setMesVendaStr]=useState(defaultData);
   const[precoVenda,setPrecoVenda]=useState("");
   const[erros,setErros]=useState({});
   const[resultado,setResultado]=useState(null);
@@ -119,7 +112,8 @@ export default function Precos(){
   },[buscar]);
 
   // Pré-visualização do período
-  const periodoData=parseMesAno(mesVendaStr);
+  const periodoData=parseDataVenda(mesVendaStr);
+  const hoje=new Date().toISOString().slice(0,10);
 
   // Sugestão de custo de compra pela cotação
   const custoSugerido=bgi&&n(pesoEntrada)>0?(n(pesoEntrada)*n(rendimento)/100/15)*bgi.preco:0;
@@ -130,7 +124,7 @@ export default function Precos(){
     if(n(animais)<=0)errs.animais="obrigatório";
     if(n(pesoEntrada)<=0)errs.pesoEntrada="obrigatório";
     if(custoCompraFinal<=0)errs.custoCompra="informe ou aguarde cotação";
-    if(!periodoData)errs.mesVenda="use DD/MM/AAAA ou MM/AAAA com data futura";
+    if(!periodoData)errs.mesVenda="selecione uma data futura";
     if(n(precoVenda)<=0)errs.precoVenda="obrigatório";
     setErros(errs);
     if(Object.keys(errs).length>0){setResultado(null);return;}
@@ -252,9 +246,10 @@ export default function Precos(){
         <Card style={{marginBottom:12}}>
           <div style={{color:"#86efac",fontSize:10,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",marginBottom:14}}>2. PERÍODO E CUSTOS OPERACIONAIS</div>
           <FLErr label="Data Prevista de Venda *" erro={erros.mesVenda}>
-            <TI value={mesVendaStr} onChange={v=>{setMesVendaStr(v);setErros(e=>({...e,mesVenda:""}))}} placeholder="Ex: 25/10/2026 ou 10/2026" erro={erros.mesVenda}/>
-            {periodoData?<div style={{color:"#4ade80",fontSize:11,marginTop:3}}>✓ {periodoData.dias} dias — {periodoData.label}</div>
-              :mesVendaStr.length>3&&<div style={{color:"#f87171",fontSize:11,marginTop:3}}>Formato DD/MM/AAAA ou MM/AAAA, data futura</div>}
+            <input type="date" value={mesVendaStr} min={hoje}
+              onChange={e=>{setMesVendaStr(e.target.value);setErros(err=>({...err,mesVenda:""}))}}
+              style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${erros.mesVenda?"rgba(239,68,68,.5)":"rgba(255,255,255,0.1)"}`,borderRadius:10,padding:"8px 12px",color:"#f1f5f9",fontSize:15,fontWeight:600,width:"100%",outline:"none",colorScheme:"dark"}}/>
+            {periodoData&&<div style={{color:"#4ade80",fontSize:11,marginTop:3}}>✓ {periodoData.dias} dias — {periodoData.label}</div>}
           </FLErr>
           <FL label="GMD Esperado">
             <NI value={gmd} onChange={setGmd} suffix="kg/dia"/>
