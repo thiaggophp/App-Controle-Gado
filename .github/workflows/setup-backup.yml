@@ -1,0 +1,102 @@
+name: Configurar Backup Diário
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar script de backup e cron no VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            # ── Descobrir onde o PocketBase guarda os dados ──
+            PB_DATA=""
+            for d in /root/pocketbase/pb_data /var/lib/pocketbase/pb_data /home/pocketbase/pb_data /opt/pocketbase/pb_data; do
+              if [ -d "$d" ]; then PB_DATA="$d"; break; fi
+            done
+            # Fallback: procurar pelo processo
+            if [ -z "$PB_DATA" ]; then
+              PB_PID=$(pgrep -f pocketbase | head -1)
+              if [ -n "$PB_PID" ]; then
+                PB_CMD=$(cat /proc/$PB_PID/cmdline | tr '\0' ' ')
+                echo "Processo PocketBase: $PB_CMD"
+              fi
+              PB_DATA=$(find / -name "pb_data" -type d 2>/dev/null | grep -v proc | head -1)
+            fi
+
+            echo "PocketBase data dir: ${PB_DATA:-NAO ENCONTRADO}"
+
+            # ── Criar diretório de backups ──
+            mkdir -p /var/backups/apps
+
+            # ── Criar script de backup ──
+            cat > /usr/local/bin/backup-apps.sh << 'SCRIPT'
+            #!/bin/bash
+            set -e
+            DATE=$(date +%Y-%m-%d)
+            DEST="/var/backups/apps"
+            mkdir -p "$DEST"
+
+            echo "[$(date)] Iniciando backup..."
+
+            # Backup do PocketBase (dados de todos os apps)
+            PB_DATA=""
+            for d in /root/pocketbase/pb_data /var/lib/pocketbase/pb_data /home/pocketbase/pb_data /opt/pocketbase/pb_data; do
+              if [ -d "$d" ]; then PB_DATA="$d"; break; fi
+            done
+            if [ -z "$PB_DATA" ]; then
+              PB_DATA=$(find / -name "pb_data" -type d 2>/dev/null | grep -v proc | head -1)
+            fi
+
+            if [ -n "$PB_DATA" ]; then
+              tar -czf "${DEST}/pocketbase-${DATE}.tar.gz" "$PB_DATA" 2>/dev/null
+              echo "[$(date)] PocketBase backup: ${DEST}/pocketbase-${DATE}.tar.gz ($(du -sh ${DEST}/pocketbase-${DATE}.tar.gz | cut -f1))"
+            else
+              echo "[$(date)] AVISO: PocketBase data dir nao encontrado"
+            fi
+
+            # Backup dos sites (html estático)
+            for site in /var/www/html /var/www/financascasa /var/www/gado-html /var/www/obras-html /var/www/outdoor-html; do
+              if [ -d "$site" ]; then
+                NOME=$(basename "$site")
+                tar -czf "${DEST}/site-${NOME}-${DATE}.tar.gz" "$site" 2>/dev/null
+                echo "[$(date)] Site backup: ${NOME} ($(du -sh ${DEST}/site-${NOME}-${DATE}.tar.gz | cut -f1))"
+              fi
+            done
+
+            # Remover backups com mais de 7 dias
+            find "$DEST" -name "*.tar.gz" -mtime +7 -delete
+            echo "[$(date)] Backups antigos removidos."
+
+            # Listar backups atuais
+            echo "[$(date)] Backups disponíveis:"
+            ls -lh "$DEST"/*.tar.gz 2>/dev/null || echo "Nenhum backup encontrado"
+
+            echo "[$(date)] Backup concluído!"
+            SCRIPT
+
+            chmod +x /usr/local/bin/backup-apps.sh
+
+            # ── Configurar cron diário às 3h ──
+            CRON_LINE="0 3 * * * /usr/local/bin/backup-apps.sh >> /var/log/backup-apps.log 2>&1"
+            (crontab -l 2>/dev/null | grep -v backup-apps; echo "$CRON_LINE") | crontab -
+
+            echo "✓ Script criado em /usr/local/bin/backup-apps.sh"
+            echo "✓ Cron configurado: diariamente às 3h"
+            crontab -l | grep backup
+
+            # ── Rodar backup agora para testar ──
+            echo ""
+            echo "Rodando backup de teste..."
+            /usr/local/bin/backup-apps.sh
+
+            echo ""
+            echo "Backups disponíveis em /var/backups/apps/:"
+            ls -lh /var/backups/apps/ 2>/dev/null || echo "Nenhum"
