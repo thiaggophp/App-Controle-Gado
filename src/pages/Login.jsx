@@ -48,7 +48,7 @@ export default function Login({onLogin}){
       const existing=await getAccount(e);
       if(existing){setMsg({t:"error",m:"E-mail já cadastrado"});setLoading(false);return}
       await addSignupRequest({email:e,name:name.trim(),requestedAt:new Date().toISOString(),status:"pending"});
-      sendSignupNotification(name.trim(),e);
+      try{await sendSignupNotification(name.trim(),e)}catch{}
       setMsg({t:"success",m:"Solicitação enviada! Aguarde aprovação."});setMode("login");
     }catch(err){setMsg({t:"error",m:"Erro: "+err.message});}
     setLoading(false);

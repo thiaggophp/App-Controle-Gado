@@ -33,8 +33,8 @@ export default function Admin({currentUser}){
     if(accounts.find(a=>a.email===e)){setMsg({t:"error",m:"E-mail já cadastrado"});return}
     setLoading(true);const pass=generatePassword();
     try{
-      await sendPasswordEmail(newName.trim(),e,pass);
       await saveAccount({email:e,name:newName.trim(),password:pass,role:"user",status:"active",createdAt:new Date().toISOString(),mustChangePassword:true,protected:false});
+      await sendPasswordEmail(newName.trim(),e,pass);
       setMsg({t:"success",m:`Usuário criado! Senha provisória: ${pass} — E-mail enviado para ${e}`});setNewName("");setNewEmail("");await load();
     }catch(err){setMsg({t:"error",m:"Erro: "+err.message})}
     setLoading(false);
@@ -43,8 +43,8 @@ export default function Admin({currentUser}){
   const handleApprove=async(req)=>{
     setLoading(true);const pass=generatePassword();
     try{
-      await sendPasswordEmail(req.name,req.email,pass);
       await saveAccount({email:req.email,name:req.name,password:pass,role:"user",status:"active",createdAt:new Date().toISOString(),mustChangePassword:true,protected:false});
+      await sendPasswordEmail(req.name,req.email,pass);
       await deleteSignupRequest(req.email);
       setMsg({t:"success",m:`${req.name} aprovado! Senha provisória: ${pass}`});await load();
     }catch(err){setMsg({t:"error",m:"Erro: "+err.message})}

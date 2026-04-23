@@ -139,7 +139,7 @@ export default function LoteDetalhe({lote,user,onVoltar}){
     if(!pesAgora.length)return null;
     const ultPeso=pesAgora[0].peso;
     const dataRef=a.dataEntrada||lote.dataEntrada;
-    const dias=Math.floor((new Date()-new Date(dataRef+"T12:00"))/(1000*60*60*24))||1;
+    const dias=Math.max(1,Math.floor((new Date()-new Date(dataRef+"T12:00"))/(1000*60*60*24)));
     return((ultPeso-a.pesoEntrada)/dias).toFixed(3);
   };
 
