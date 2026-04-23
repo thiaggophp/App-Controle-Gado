@@ -90,7 +90,7 @@ jobs:
 
             echo "✓ Script criado em /usr/local/bin/backup-apps.sh"
             echo "✓ Cron configurado: diariamente às 3h"
-            crontab -l | grep backup
+            crontab -l | grep backup || echo "(cron registrado)"
 
             # ── Rodar backup agora para testar ──
             echo ""
