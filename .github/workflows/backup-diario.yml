@@ -23,34 +23,22 @@ jobs:
         if: success()
         run: |
           DATA=$(date '+%d/%m/%Y às %H:%M')
-          curl -s -X POST "https://api.emailjs.com/api/v1.0/email/send" \
+          curl -s -X POST "https://mail.vexasistemas.com.br/notify-signup" \
             -H "Content-Type: application/json" \
-            -d '{
-              "service_id": "service_d0uex69",
-              "template_id": "template_nzuzzgq",
-              "user_id": "5R9ZxFkk-UzbIXlGh",
-              "template_params": {
-                "to_name": "Thiago",
-                "to_email": "thiaggotx@gmail.com",
-                "temp_password": "'"✅ Backup realizado com sucesso em ${DATA}. Arquivos salvos em /var/backups/apps/ no servidor (retenção 7 dias)."'",
-                "app_name": "Backup Automático"
-              }
-            }'
+            -d "{
+              \"requester_name\": \"✅ Backup concluído em ${DATA}\",
+              \"requester_email\": \"Arquivos salvos em /var/backups/apps/ no servidor. Retenção: 7 dias.\",
+              \"app_name\": \"Backup Automático — Apps\"
+            }"
 
       - name: Email — erro
         if: failure()
         run: |
           DATA=$(date '+%d/%m/%Y às %H:%M')
-          curl -s -X POST "https://api.emailjs.com/api/v1.0/email/send" \
+          curl -s -X POST "https://mail.vexasistemas.com.br/notify-signup" \
             -H "Content-Type: application/json" \
-            -d '{
-              "service_id": "service_d0uex69",
-              "template_id": "template_nzuzzgq",
-              "user_id": "5R9ZxFkk-UzbIXlGh",
-              "template_params": {
-                "to_name": "Thiago",
-                "to_email": "thiaggotx@gmail.com",
-                "temp_password": "'"⚠️ ATENÇÃO: O backup automático FALHOU em ${DATA}. Acesse https://github.com/thiaggophp/App-Controle-Gado/actions para verificar o erro."'",
-                "app_name": "Backup Automático — ERRO"
-              }
-            }'
+            -d "{
+              \"requester_name\": \"❌ Backup FALHOU em ${DATA}\",
+              \"requester_email\": \"Acesse https://github.com/thiaggophp/App-Controle-Gado/actions para ver o erro.\",
+              \"app_name\": \"Backup Automático — ERRO\"
+            }"
